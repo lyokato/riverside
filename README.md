@@ -19,21 +19,27 @@ be found at [https://hexdocs.pm/riverside](https://hexdocs.pm/riverside).
 
 ## Usage
 
-### Session Module
-
 ```elixir
 
 defmodule YourApp.Session do
+
+  require Logger
 
   use Riverside
 
   @impl true
   def authenticate({:basic, username, password}, queries, stash) do
-    user_id = YourApp.Authenticator.authenticate(username, password)
-    {:ok, user_id, stash}
+
+    case YourApp.Authenticator.authenticate(username, password) do
+      {:ok, user_id} -> {:ok, user_id, stash}
+      _other         -> {:error, :invalid_request}
+    end
+
   end
   def authenticate(_credentials, _queries, _stash) do
+
     {:error, :invalid_request}
+
   end
 
   @impl true
@@ -54,19 +60,36 @@ defmodule YourApp.Session do
 end
 ```
 
-### Setup Configuration
-
 config.exs
 
 ```elixir
 ```
 
-### Setup Supervisors
+your application starter.
 
 ```elixir
 
 
 ```
+
+### Session Module
+
+Define your own Session module with **Riverside**.
+
+Implement following callback functions which **RiverSide** requires.
+
+- authenticate/3
+- init/1
+- handle_message/2
+- terminate
+
+#### authenticate/3
+
+Arguments
+
+* credential - :default, {:basic, username, password}, {:bearer, token}
+* queries - Map contains qury-string params
+* stash - Map kept while this session. at the timing of authentication this is empty. You can put your fovorite preference data.
 
 #### Call Riverside.Spec.child_spec/1
 
@@ -74,4 +97,8 @@ config.exs
 RiverSide.Spec.child_spec([port: 3000, path: "/", module: YourApp.Session])
 ```
 
+
+## Author
+
+Lyo Kaot <lyo.kato __at__ gmail.com>
 
