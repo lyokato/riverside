@@ -1,7 +1,6 @@
 defmodule Riverside.Authenticator do
 
-  @type request_type :: :none
-                      | :default
+  @type request_type :: :default
                       | {:bearer_token, String.t}
                       | {:basic, String.t}
 

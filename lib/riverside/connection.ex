@@ -214,14 +214,6 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_authentication(:none, _params, _req, _mod) do
-
-    Logger.debug "WebSocket - None Authentication"
-
-    {:ok, Riverside.IO.Random.bigint(), %{}}
-
-  end
-
   defp handle_authentication(:default, params, req, mod) do
 
     Logger.debug "WebSocket - Default Authentication"
