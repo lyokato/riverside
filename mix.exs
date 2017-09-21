@@ -17,7 +17,7 @@ defmodule Riverside.Mixfile do
       :secure_random,
       :uuid,
       :plug,
-      :gproc,
+      :ebus,
       :poison
     #]
       ],
@@ -29,7 +29,7 @@ defmodule Riverside.Mixfile do
      {:cowboy, "~> 1.0.0"},
      {:secure_random, "~> 0.5.1"},
      {:uuid, "~> 1.1"},
-     {:gproc, "~> 0.5.0"},
+     {:ebus, "~> 0.2.1", hex: :erlbus},
      {:poison, "~> 3.1"},
      {:graceful_stopper, github: "lyokato/graceful_stopper", tag: "0.1.1" },
      {:plug, "~> 1.3"}

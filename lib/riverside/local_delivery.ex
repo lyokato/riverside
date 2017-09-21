@@ -38,13 +38,12 @@ defmodule Riverside.LocalDelivery do
   end
 
   defp dispatch(topic, message) do
-    :gproc.lookup_pids({:n, :l, topic})
-    |> Enum.each(&(send(&1, message)))
+    :ebus.pub(topic, message)
   end
 
   def register(user_id, session_id) do
-    :gproc.reg({:n, :l, Topic.user(user_id)})
-    :gproc.reg({:n, :l, Topic.session(user_id, session_id)})
+    :ebus.sub(self(), Topic.user(user_id))
+    :ebus.sub(self(), Topic.session(user_id, session_id))
   end
 
 end

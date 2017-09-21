@@ -27,6 +27,8 @@ defmodule Riverside.Connection do
 
     Logger.info "WebSocket - incoming new request: #{peer}"
 
+    Logger.warn("INIT_PID: #{inspect self()}")
+
     mod = Keyword.fetch!(opts, :session_module)
 
     {queries, _} = :cowboy_req.qs_vals(req)
@@ -52,6 +54,8 @@ defmodule Riverside.Connection do
   def websocket_init(_type, req, {mod, state}) do
 
     Logger.info "#{state} setup"
+
+    Logger.warn("WEBSOCKET_INIT_PID: #{inspect self()}")
 
     Process.flag(:trap_exit, true)
 
