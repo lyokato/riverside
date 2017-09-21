@@ -106,13 +106,21 @@ defmodule Riverside.Connection do
 
   end
 
-  def websocket_info(event, req, {mod, state}) do
+  # TODO support handle_info on session module
+  #
+  #def websocket_info(event, req, {mod, state}) do
 
-    Logger.info "#{state} info: unsupported event #{inspect event}"
+  #  Logger.info "#{state} info: unsupported event #{inspect event}"
 
-    {:ok, req, {mod, state}}
+  #  case mod.handle_info(event, state) do
+  #    {:ok, state2} ->
+  #      {:ok, req, {mod, state2}}
+  #    # TODO
+  #    _other ->
+  #      {:shutdown, req, {mod, state}}
+  #  end
 
-  end
+  #end
 
   def websocket_handle({:ping, data}, req, {mod, state}) do
 
