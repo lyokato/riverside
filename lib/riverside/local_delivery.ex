@@ -2,6 +2,10 @@ defmodule Riverside.LocalDelivery do
 
   defmodule Topic do
 
+    def channel(channel_id) do
+      {:ws_channel, channel_id}
+    end
+
     def user(user_id) do
       {:ws_user, user_id}
     end
@@ -14,22 +18,34 @@ defmodule Riverside.LocalDelivery do
 
   @type frame_type :: :text | :binary
 
-  @spec deliver_to_user(non_neg_integer, frame_type, any) :: :ok
-    | {:error, :not_found}
-  def deliver_to_user(user_id, frame_type, message) do
+  @type destination :: {:user, non_neg_integer}
+                     | {:session, non_neg_integer, String.t}
+                     | {:channel, term}
+
+  @spec deliver(destination, {frame_type, any}) :: no_return
+  def deliver({:user, user_id}, {frame_type, message}) do
     Topic.user(user_id)
     |> deliver_message(frame_type, message)
   end
-
-  @spec deliver_to_session(non_neg_integer, String.t, frame_type, any) :: :ok
-    | {:error, :not_found}
-  def deliver_to_session(user_id, session_id, frame_type, message) do
+  def deliver({:session, user_id, session_id}, {frame_type, message}) do
     Topic.session(user_id, session_id)
+    |> deliver_message(frame_type, message)
+  end
+  def deliver({:channel, channel_id}, {frame_type, message}) do
+    Topic.channel(channel_id)
     |> deliver_message(frame_type, message)
   end
 
   def deliver_message(topic, frame_type, message) do
     dispatch(topic, {:deliver, frame_type, message})
+  end
+
+  def join_channel(channel_id) do
+    :ebus.sub(self(), Topic.channel(channel_id))
+  end
+
+  def leave_channel(channel_id) do
+    :ebus.unsub(self(), Topic.channel(channel_id))
   end
 
   def close(user_id, session_id) do

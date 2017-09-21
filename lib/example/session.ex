@@ -32,10 +32,8 @@ defmodule Example.Session do
 
     Logger.debug "just echo"
 
-    deliver_to_session(state.user_id,
-                       state.id,
-                       :text,
-                       Poison.encode!(msg))
+    deliver({:session, state.user_id, state.id},
+            {:text, Poison.encode!(msg)})
 
     {:ok, state}
 

@@ -21,8 +21,9 @@ defmodule Riverside do
       @behaviour Riverside.Behaviour
 
       import Riverside.LocalDelivery, only: [
-        deliver_to_user: 3,
-        deliver_to_session: 4,
+        deliver: 2,
+        join_channel: 1,
+        leave_channel: 1,
         close: 2
       ]
 
