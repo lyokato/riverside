@@ -21,10 +21,11 @@ defmodule Riverside.Supervisor do
 
   defp cowboy_opts(router, opts) do
 
-    port = Keyword.fetch!(opts, :port)
-    path = Keyword.fetch!(opts, :path)
+    module = Keyword.fetch!(opts, :module)
+    port   = Keyword.fetch!(opts, :port)
+    path   = Keyword.fetch!(opts, :path)
 
-    cowboy_opts = [port: port, dispatch: dispatch_opts(router, path)]
+    cowboy_opts = [port: port, dispatch: dispatch_opts(module, router, path)]
 
     if Keyword.get(opts, :reuse_port, false) do
       cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
@@ -34,10 +35,10 @@ defmodule Riverside.Supervisor do
 
   end
 
-  defp dispatch_opts(router, path) do
+  defp dispatch_opts(module, router, path) do
     [
       {:_, [
-        {path, Riverside.Connection, []},
+        {path, Riverside.Connection, [session_module: module]},
         {:_, Plug.Adapters.Cowboy.Handler, {router, []}}
       ]}
     ]

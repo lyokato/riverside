@@ -13,7 +13,6 @@ defmodule Riverside.Connection do
 
   @auth_type Application.get_env(:riverside, :authentication, :default)
   @decoder Application.get_env(:riverside, :message_decoder, JsonDecoder)
-  @session Application.get_env(:riverside, :session_module)
 
   @default_timeout 120_000
 
@@ -22,20 +21,22 @@ defmodule Riverside.Connection do
                    | {:bearer_token, String.t}
                    | {:basic, String.t}
 
-  def init(_, req, _opts) do
+  def init(_, req, opts) do
 
     peer = PeerInfo.gather(req)
 
     Logger.info "WebSocket - incoming new request: #{peer}"
 
+    mod = Keyword.fetch!(opts, :session_module)
+
     {queries, _} = :cowboy_req.qs_vals(req)
     params = queries |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
 
-    case handle_authentication(@auth_type, params, req) do
+    case handle_authentication(@auth_type, params, req, mod) do
 
       {:ok, user_id, stash} ->
         state = State.new(user_id, peer, stash)
-        {:upgrade, :protocol, :cowboy_websocket, req, state}
+        {:upgrade, :protocol, :cowboy_websocket, req, {mod, state}}
 
       {:error, :bad_request, req2} ->
         Logger.info "WebSocket - failed to authenticate, shutdown"
@@ -48,7 +49,7 @@ defmodule Riverside.Connection do
     end
   end
 
-  def websocket_init(_type, req, state) do
+  def websocket_init(_type, req, {mod, state}) do
 
     Logger.info "#{state} setup"
 
@@ -62,94 +63,94 @@ defmodule Riverside.Connection do
 
     timeout = Application.get_env(:riverside, :connection_timeout, @default_timeout)
 
-    {:ok, :cowboy_req.compact(req), state, timeout, :hibernate}
+    {:ok, :cowboy_req.compact(req), {mod, state}, timeout, :hibernate}
 
   end
 
-  def websocket_info(:post_init, req, state) do
+  def websocket_info(:post_init, req, {mod, state}) do
 
     Logger.debug "#{state} info: post_init"
 
-    case @session.init(state) do
+    case mod.init(state) do
 
       {:ok, state2} ->
-        {:ok, req, state2, :hibernate}
+        {:ok, req, {mod, state2}, :hibernate}
 
       {:error, reason} ->
         Logger.info "#{state} failed to initialize: #{inspect reason}"
-        {:shutdown, req, state}
+        {:shutdown, req, {mod, state}}
 
     end
 
   end
 
-  def websocket_info(:stop, req, state) do
+  def websocket_info(:stop, req, {mod, state}) do
 
     Logger.debug "#{state} info: stop"
 
-    {:shutdown, req, state}
+    {:shutdown, req, {mod, state}}
   end
 
-  def websocket_info({:deliver, type, msg}, req, state) do
+  def websocket_info({:deliver, type, msg}, req, {mod, state}) do
 
     Logger.debug "#{state} info: deliver"
 
-    {:reply, {type, msg}, req, state, :hibernate}
+    {:reply, {type, msg}, req, {mod, state}, :hibernate}
   end
 
-  def websocket_info({:EXIT, pid, _reason}, req, state) do
+  def websocket_info({:EXIT, pid, _reason}, req, {mod, state}) do
 
     Logger.debug "#{state} info: EXIT <FROM:#{inspect pid}> to <SELF:#{inspect self()}>"
 
-    {:shutdown, req, state}
+    {:shutdown, req, {mod, state}}
 
   end
 
-  def websocket_info(event, req, state) do
+  def websocket_info(event, req, {mod, state}) do
 
     Logger.info "#{state} info: unsupported event #{inspect event}"
 
-    {:ok, req, state}
+    {:ok, req, {mod, state}}
 
   end
 
-  def websocket_handle({:ping, data}, req, state) do
+  def websocket_handle({:ping, data}, req, {mod, state}) do
 
     Logger.debug "#{state} incoming PING frame"
 
-    handle_frame(req, :ping, data, state)
+    handle_frame(req, :ping, data, {mod, state})
 
   end
 
-  def websocket_handle({:binary, data}, req, state) do
+  def websocket_handle({:binary, data}, req, {mod, state}) do
 
     Logger.debug "#{state} incoming BINARY frame"
 
-    handle_frame(req, :binary, data, state)
+    handle_frame(req, :binary, data, {mod, state})
 
   end
 
-  def websocket_handle({:text, data}, req, state) do
+  def websocket_handle({:text, data}, req, {mod, state}) do
 
     Logger.debug "#{state} incoming TEXT frame"
 
-    handle_frame(req, :text, data, state)
+    handle_frame(req, :text, data, {mod, state})
 
   end
 
-  def websocket_handle(event, req, state) do
+  def websocket_handle(event, req, {mod, state}) do
 
     Logger.debug "#{state} handle: unsupported event #{inspect event}"
 
-    {:ok, req, state}
+    {:ok, req, {mod, state}}
 
   end
 
-  def websocket_terminate(reason, _req, state) do
+  def websocket_terminate(reason, _req, {mod, state}) do
 
     Logger.info "#{state} :terminate #{inspect reason}"
 
-    @session.terminate(state)
+    mod.terminate(state)
 
     Stats.countdown_connections()
 
@@ -157,43 +158,43 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_frame(req, frame_type, data, state) do
+  defp handle_frame(req, frame_type, data, {mod, state}) do
 
     Stats.countup_messages()
 
     case State.countup_messages(state) do
 
       {:ok, state2} ->
-        case handle_data(frame_type, data, state2) do
+        case handle_data(frame_type, data, {mod, state2}) do
 
-          {:ok, state3} -> {:ok, req, state3}
+          {:ok, state3} -> {:ok, req, {mod, state3}}
 
           {:error, reason} ->
             Logger.info "#{state2} failed to handle frame: #{inspect reason}"
-            {:ok, req, state2}
+            {:ok, req, {mod, state2}}
 
         end
 
       {:error, :too_many_messages} ->
         Logger.warn "#{state} too many messages: #{State.peer_address(state)}"
-        {:shutdown, req, state}
+        {:shutdown, req, {mod, state}}
 
     end
 
   end
 
-  defp handle_data(:ping, _data, _state) do
+  defp handle_data(:ping, _data, {_mod, _state}) do
     :ok
   end
 
-  defp handle_data(frame_type, data, state) do
+  defp handle_data(frame_type, data, {mod, state}) do
 
     if @decoder.supports_frame_type?(frame_type) do
 
       case @decoder.decode(data) do
 
         {:ok, message} ->
-          @session.handle_message(message, state)
+          mod.handle_message(message, state)
 
         {:error, _reason} ->
           {:error, :invalid_message}
@@ -210,42 +211,39 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_authentication(:none, _params, _req) do
+  defp handle_authentication(:none, _params, _req, _mod) do
 
     Logger.debug "WebSocket - None Authentication"
 
     {:ok, Riverside.IO.Random.bigint(), %{}}
   end
 
-  defp handle_authentication(:default, params, req) do
+  defp handle_authentication(:default, params, req, mod) do
 
     Logger.debug "WebSocket - Default Authentication"
 
     Authenticator.Default.authenticate(req, fn cred ->
-      @session.authenticate(cred, params, %{})
+      mod.authenticate(cred, params, %{})
     end)
 
   end
 
-  defp handle_authentication({:bearer_token, realm}, params, req) do
+  defp handle_authentication({:bearer_token, realm}, params, req, mod) do
 
     Logger.debug "WebSocket - BearerToken Authentication"
 
     Authenticator.BearerToken.authenticate(req, realm, fn cred ->
-      @session.authenticate(cred, params, %{})
+      mod.authenticate(cred, params, %{})
     end)
 
   end
 
-  defp handle_authentication({:basic, realm}, params, req) do
+  defp handle_authentication({:basic, realm}, params, req, mod) do
 
     Logger.debug "WebSocket - Basic Authentication"
 
-    #Basic.authenticate(req, realm,
-    #  &(@session.authenticate(&1, params, %{})))
-
     Authenticator.Basic.authenticate(req, realm, fn cred ->
-      @session.authenticate(cred, params, %{})
+      mod.authenticate(cred, params, %{})
     end)
 
   end

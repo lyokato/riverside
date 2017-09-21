@@ -19,7 +19,9 @@ defmodule Riverside.Mixfile do
       :plug,
       :gproc,
       :poison
-    ]]
+    #]
+      ],
+     mod: {Example.Bootstrap, []}]
   end
 
   defp deps do
