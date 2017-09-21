@@ -1,8 +1,13 @@
 defmodule Riverside.Authenticator.BearerToken do
 
+  @behaviour Riverside.Authenticator.Behaviour
+
   require Logger
 
-  def authenticate(req, realm, f) do
+  def authenticate(req, opts, f) do
+
+    realm = Keyword.get(opts, "realm", "")
+
     with {:ok, token}          <- parse_authorization_header(req),
          {:ok, user_id, stash} <- f.({:bearer_token, token}) do
 

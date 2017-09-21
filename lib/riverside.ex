@@ -1,15 +1,11 @@
 defmodule Riverside do
 
   alias Riverside.State
+  alias Riverside.Authenticator
 
   defmodule Behaviour do
 
-    @type credential_type :: :default
-                           | {:bearer_token, String.t}
-                           | {:basic, String.t, String.t}
-
-    @callback authenticate(credential_type, map, map) :: {:ok, non_neg_integer, map}
-      | {:error, :invalid_token | :invalid_request}
+    @callback authenticate(Authenticator.cred_type, map, map) :: Authenticator.callback_result
 
     @callback init(State.t) :: {:ok, State.t} | {:error, any}
 

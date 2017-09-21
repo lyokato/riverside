@@ -1,6 +1,6 @@
 # Riverside
 
-**TODO: Add description**
+Simple WebSocket Server Framework for Elixir
 
 ## Installation
 
@@ -76,7 +76,7 @@ your application starter.
 
 Define your own Session module with **Riverside**.
 
-Implement following callback functions which **RiverSide** requires.
+Implement following callback functions which **Riverside** requires.
 
 - authenticate/3
 - init/1
@@ -94,7 +94,7 @@ Arguments
 #### Call Riverside.Spec.child_spec/1
 
 ```elixir
-RiverSide.Spec.child_spec([port: 3000, path: "/", module: YourApp.Session])
+Riverside.Spec.child_spec([port: 3000, path: "/", module: YourApp.Session])
 ```
 
 

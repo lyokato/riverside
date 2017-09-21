@@ -11,15 +11,7 @@ defmodule Riverside.Connection do
   alias Riverside.Session.State
   alias Riverside.Stats
 
-  @auth_type Application.get_env(:riverside, :authentication, :default)
-  @decoder Application.get_env(:riverside, :message_decoder, JsonDecoder)
-
   @default_timeout 120_000
-
-  @type auth_type :: :none
-                   | :default
-                   | {:bearer_token, String.t}
-                   | {:basic, String.t}
 
   def init(_, req, opts) do
 
@@ -34,7 +26,8 @@ defmodule Riverside.Connection do
     {queries, _} = :cowboy_req.qs_vals(req)
     params = queries |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
 
-    case handle_authentication(@auth_type, params, req, mod) do
+    auth_type = Application.get_env(:riverside, :authentication, :default)
+    case handle_authentication(auth_type, params, req, mod) do
 
       {:ok, user_id, stash} ->
         state = State.new(user_id, peer, stash)
@@ -201,9 +194,11 @@ defmodule Riverside.Connection do
 
   defp handle_data(frame_type, data, {mod, state}) do
 
-    if @decoder.supports_frame_type?(frame_type) do
+    decoder = Application.get_env(:riverside, :message_decoder, JsonDecoder)
 
-      case @decoder.decode(data) do
+    if decoder.supports_frame_type?(frame_type) do
+
+      case decoder.decode(data) do
 
         {:ok, message} ->
           mod.handle_message(message, state)
@@ -234,7 +229,7 @@ defmodule Riverside.Connection do
 
     Logger.debug "WebSocket - Default Authentication"
 
-    Authenticator.Default.authenticate(req, fn cred ->
+    Authenticator.Default.authenticate(req, [], fn cred ->
       mod.authenticate(cred, params, %{})
     end)
 
@@ -244,7 +239,7 @@ defmodule Riverside.Connection do
 
     Logger.debug "WebSocket - BearerToken Authentication"
 
-    Authenticator.BearerToken.authenticate(req, realm, fn cred ->
+    Authenticator.BearerToken.authenticate(req, [realm: realm], fn cred ->
       mod.authenticate(cred, params, %{})
     end)
 
@@ -254,7 +249,7 @@ defmodule Riverside.Connection do
 
     Logger.debug "WebSocket - Basic Authentication"
 
-    Authenticator.Basic.authenticate(req, realm, fn cred ->
+    Authenticator.Basic.authenticate(req, [realm: realm], fn cred ->
       mod.authenticate(cred, params, %{})
     end)
 

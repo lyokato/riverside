@@ -1,6 +1,8 @@
 defmodule Riverside.Authenticator.Default do
 
-  def authenticate(_req, f) do
+  @behaviour Riverside.Authenticator.Behaviour
+
+  def authenticate(_req, _opts, f) do
     f.({:default})
   end
 
