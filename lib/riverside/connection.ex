@@ -191,7 +191,8 @@ defmodule Riverside.Connection do
 
   end
 
+  defp handle_data(:text, data, {mod, state}), do: mod.__handle_data__(:text, data, state)
+  defp handle_data(:binary, data, {mod, state}), do: mod.__handle_data__(:binary, data, state)
   defp handle_data(:ping, _data, {_mod, _state}), do: :ok
-  defp handle_data(type, data, {mod, state}),     do: mod.__handle_data__(type, data, state)
 
 end

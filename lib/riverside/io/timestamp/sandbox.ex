@@ -9,13 +9,13 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   def seconds() do
     {:ok, seconds} = GenServer.call(__MODULE__, :get_seconds)
     Logger.debug "[Sandbox] Timestamp.seconds/0 returns: #{seconds}"
-    seconds;
+    seconds
   end
 
   def milli_seconds() do
     {:ok, milli_seconds} = GenServer.call(__MODULE__, :get_milli_seconds)
     Logger.debug "[Sandbox] Timestamp.milli_seconds/0 returns: #{milli_seconds}"
-    milli_seconds;
+    milli_seconds
   end
 
   def set_seconds(list) when is_list(list) do

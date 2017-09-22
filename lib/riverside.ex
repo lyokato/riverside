@@ -52,6 +52,8 @@ defmodule Riverside do
         close: 2
       ]
 
+      import Riverside.Session.State, only: [trap_exit: 2]
+
       @impl true
       def __connection_timeout__ do
         @connection_timeout

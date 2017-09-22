@@ -7,35 +7,36 @@ defmodule Riverside.Spec do
   ## Usage
 
   ```
-  children = Riverside.Spec.children([session: Example.Session,
+  children = Riverside.Spec.children(Example.Session,
                                       port: 3000,
                                       path: "/",
-                                      reuse_port: false])
+                                      reuse_port: false)
 
   Supervisor.start_link(children, opts)
   ```
 
   ## Arguments
 
-  keyword list includes following parameters.
+  First argument is module session which implements Riverside.Behaviour
 
-  * session (required): Session module
-  * port (optional): port number on which websocket server use. (default: 3000)
-  * path (optional): WebSocket endpoint URL path. (default: "/")
-  * reuse_port (optional): Boolean flag for TCP SO_REUSEPORT option. (default: false)
-  * router (optional): Plug router. (default Riverside.Router)
+  Second is keyword list includes following parameters.
+
+  * port: port number on which websocket server use. (default: 3000)
+  * path: WebSocket endpoint URL path. (default: "/")
+  * reuse_port: Boolean flag for TCP SO_REUSEPORT option. (default: false)
+  * router: Plug router. (default Riverside.Router)
 
   """
 
-  @spec children(keyword) :: list
-  def children(opts) do
+  @spec children(module, keyword) :: list
+  def children(session_module, opts \\ []) do
 
     import Supervisor.Spec, warn: false
 
     [
       worker(Riverside.Stats, []),
 
-      supervisor(Riverside.Supervisor, [opts]),
+      supervisor(Riverside.Supervisor, [[session_module, opts]]),
 
       worker(GracefulStopper.Plug,
         [[timeout: 0, endpoint: Riverside.Supervisor]],
