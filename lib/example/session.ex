@@ -31,7 +31,7 @@ defmodule Example.Session do
 
   def handle_message(msg, state) do
 
-    Logger.debug "#{state} message"
+    Logger.debug "#{state} message: #{inspect msg}"
 
     Logger.debug "just echo"
 

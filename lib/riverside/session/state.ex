@@ -45,7 +45,7 @@ defmodule Riverside.Session.State do
     case MessageCounter.countup(counter) do
 
       {:ok, counter} ->
-        {:ok, %{state|counter: counter}}
+        {:ok, %{state|message_counter: counter}}
 
       {:error, :too_many_messages} ->
         {:error, :too_many_messages}
