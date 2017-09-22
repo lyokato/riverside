@@ -1,6 +1,6 @@
 defmodule Riverside.Session.State do
 
-  @abbreviation_header "WebSocket"
+  @abbreviation_header "Session"
   @session_id_length 20
 
   alias Riverside.IO.Random

@@ -4,15 +4,11 @@ defmodule Riverside.Connection do
 
   require Logger
 
-  alias Riverside.Authenticator
   alias Riverside.LocalDelivery
   alias Riverside.MessageDecoder.JsonDecoder
   alias Riverside.PeerInfo
   alias Riverside.Session.State
   alias Riverside.Stats
-  alias Riverside.Util.CowboyUtil
-
-  @default_timeout 120_000
 
   def init(_, req, opts) do
 
@@ -22,11 +18,7 @@ defmodule Riverside.Connection do
 
     mod = Keyword.fetch!(opts, :session_module)
 
-    auth_type = Application.get_env(:riverside, :authentication, :default)
-
-    params = CowboyUtil.query_map(req)
-
-    case handle_authentication(auth_type, params, req, mod) do
+    case mod.__authenticate__(req) do
 
       {:ok, user_id, stash} ->
         state = State.new(user_id, peer, stash)
@@ -55,7 +47,7 @@ defmodule Riverside.Connection do
 
     LocalDelivery.register(state.user_id, state.id)
 
-    timeout = Application.get_env(:riverside, :connection_timeout, @default_timeout)
+    timeout = mod.__connection_timeout__
 
     {:ok, :cowboy_req.compact(req), {mod, state}, timeout, :hibernate}
 
@@ -213,46 +205,6 @@ defmodule Riverside.Connection do
 
     end
 
-  end
-
-  defp handle_authentication(:default, params, req, mod) do
-
-    Logger.debug "WebSocket - Default Authentication"
-
-    Authenticator.Default.authenticate(req, [], fn cred ->
-      execute_session_authentication(mod, cred, params)
-    end)
-
-  end
-
-  defp handle_authentication({:bearer_token, realm}, params, req, mod) do
-
-    Logger.debug "WebSocket - BearerToken Authentication"
-
-    Authenticator.BearerToken.authenticate(req, [realm: realm], fn cred ->
-      execute_session_authentication(mod, cred, params)
-    end)
-
-  end
-
-  defp handle_authentication({:basic, realm}, params, req, mod) do
-
-    Logger.debug "WebSocket - Basic Authentication"
-
-    Authenticator.Basic.authenticate(req, [realm: realm], fn cred ->
-      execute_session_authentication(mod, cred, params)
-    end)
-
-  end
-
-  defp execute_session_authentication(mod, cred, params) do
-    try do
-      mod.authenticate(cred, params, %{})
-    catch
-      err ->
-        stacktrace = Exception.format_stacktrace(System.stacktrace())
-        Logger.error "#{inspect err} #{inspect stacktrace}"
-    end
   end
 
 end

@@ -27,7 +27,11 @@ defimpl String.Chars, for: Riverside.PeerInfo do
   alias Riverside.PeerInfo
 
   def to_string(%PeerInfo{address: address, port: port, x_forwarded_for: x_forwarded_for}) do
-    "<IP:#{:inet_parse.ntoa(address)}/PORT:#{port}/X-FORWARDED-FOR:#{x_forwarded_for}>"
+    Poison.encode!(%{
+      ip: "#{:inet_parse.ntoa(address)}",
+      port: port,
+      x_forwarded_for: x_forwarded_for
+    })
   end
 
 end

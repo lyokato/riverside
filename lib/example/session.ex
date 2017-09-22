@@ -1,7 +1,10 @@
 defmodule Example.Session do
 
   require Logger
-  use Riverside
+
+  use Riverside,
+    authentication: {:basic, "exmaple.org"},
+    connection_timeout: 60_000
 
   def authenticate({:basic, username, password}, _queries, stash) do
 
@@ -10,9 +13,9 @@ defmodule Example.Session do
     {:ok, String.to_integer(username), stash}
 
   end
-  def authenticate(_cred, _queries, _stash) do
+  def authenticate(cred, _queries, _stash) do
 
-    Logger.debug "Session: unsupported authentication "
+    Logger.debug "Session: unsupported authentication #{cred}"
 
     {:error, :invalid_request}
 
@@ -20,7 +23,7 @@ defmodule Example.Session do
 
   def init(state) do
 
-    Logger.debug "Session: init"
+    Logger.debug "#{state}: init"
 
     {:ok, state}
 
@@ -28,7 +31,7 @@ defmodule Example.Session do
 
   def handle_message(msg, state) do
 
-    Logger.debug "Session: message"
+    Logger.debug "#{state} message"
 
     Logger.debug "just echo"
 
