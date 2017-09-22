@@ -51,8 +51,7 @@ defmodule Riverside do
       import Riverside.LocalDelivery, only: [
         deliver: 2,
         join_channel: 1,
-        leave_channel: 1,
-        close: 2
+        leave_channel: 1
       ]
 
       import Riverside.Session, only: [trap_exit: 2]
@@ -124,6 +123,13 @@ defmodule Riverside do
         end
 
       end
+
+      @spec deliver_me(frame_type :: Riverside.MessageDecoder.frame_type,
+                       message :: binary) :: no_return
+      def deliver_me(frame_type, message), do: send(self(), {:deliver, frame_type, message})
+
+      @spec close() :: no_return
+      def close(), do: send(self(), :stop)
 
       @impl true
       def authenticate(_cred, _queries), do: {:error, :invalid_request}

@@ -4,8 +4,8 @@ defmodule Riverside.IO.Random do
 
   defmodule Behaviour do
     @callback hex(non_neg_integer) :: String.t
-    @callback bigint()             :: non_neg_integer
-    @callback uuid()               :: String.t
+    @callback bigint() :: non_neg_integer
+    @callback uuid() :: String.t
   end
 
   @behaviour Behaviour
