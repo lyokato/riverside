@@ -17,12 +17,13 @@ defmodule Riverside.Spec do
 
   ## Arguments
 
-  pass Keyword list includes following values.
+  keyword list includes following parameters.
 
   * session (required): Session module
-  * port (optional): port number on which websocket server use. set 3000 as default.
-  * path (optional): WebSocket endpoint URL path. set "/" as default.
-  * reuse_port(optional): set false as default
+  * port (optional): port number on which websocket server use. (default: 3000)
+  * path (optional): WebSocket endpoint URL path. (default: "/")
+  * reuse_port (optional): Boolean flag for TCP SO_REUSEPORT option. (default: false)
+  * router (optional): Plug router. (default Riverside.Router)
 
   """
 
@@ -34,7 +35,7 @@ defmodule Riverside.Spec do
     [
       worker(Riverside.Stats, []),
 
-      supervisor(Riverside.Supervisor,[opts]),
+      supervisor(Riverside.Supervisor, [opts]),
 
       worker(GracefulStopper.Plug,
         [[timeout: 0, endpoint: Riverside.Supervisor]],

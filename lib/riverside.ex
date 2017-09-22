@@ -39,7 +39,7 @@ defmodule Riverside do
 
       @auth_type Keyword.get(opts, :authentication, :default)
       @connection_timeout Keyword.get(opts, :connection_timeout, 120_000)
-      @messge_decoder Application.get_env(:riverside, :message_decoder,
+      @message_decoder Application.get_env(:riverside, :message_decoder,
         Riverside.MessageDecoder.JsonDecoder)
 
       import Riverside.LocalDelivery, only: [
@@ -56,28 +56,43 @@ defmodule Riverside do
 
       @impl true
       def __handle_authentication__(req) do
+
         params = Riverside.Util.CowboyUtil.query_map(req)
+
         __start_authentication__(@auth_type, params, req)
+
       end
 
       defp __start_authentication__(:default, params, req) do
+
         Logger.debug "WebSocket - Default Authentication"
+
         Riverside.Authenticator.Default.authenticate(req, [],
           &(authenticate(&1, params, %{})))
       end
+
       defp __start_authentication__({:bearer_token, realm}, params, req) do
+
         Logger.debug "WebSocket - BearerToken Authentication"
+
         Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
           &(authenticate(&1, params, %{})))
       end
+
       defp __start_authentication__({:basic, realm}, params, req) do
+
         Logger.debug "WebSocket - Basic Authentication"
+
         Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
           &(authenticate(&1, params, %{})))
       end
+
       defp __start_authentication__(cred, _params, req) do
+
         Logger.warn "Unsupported authentication credential: #{inspect cred}"
+
         {:error, :invalid_request, req}
+
       end
 
       def __handle_data__(frame_type, data, state) do
