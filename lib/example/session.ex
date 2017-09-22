@@ -6,14 +6,14 @@ defmodule Example.Session do
     authentication: {:basic, "exmaple.org"},
     connection_timeout: 60_000
 
-  def authenticate({:basic, username, password}, _queries, stash) do
+  def authenticate({:basic, username, password}, _queries) do
 
     Logger.debug "authenticate - basic #{username}:#{password}"
 
-    {:ok, String.to_integer(username), stash}
+    {:ok, String.to_integer(username), %{}}
 
   end
-  def authenticate(cred, _queries, _stash) do
+  def authenticate(cred, _queries) do
 
     Logger.debug "Session: unsupported authentication #{cred}"
 
@@ -21,28 +21,28 @@ defmodule Example.Session do
 
   end
 
-  def init(state) do
+  def init(session, state) do
 
-    Logger.debug "#{state}: init"
+    Logger.debug "#{session}: init"
 
-    {:ok, state}
+    {:ok, session, state}
 
   end
 
-  def handle_message(msg, state) do
+  def handle_message(msg, session, state) do
 
-    Logger.debug "#{state} message: #{inspect msg}"
+    Logger.debug "#{session} message: #{inspect msg}"
 
     Logger.debug "just echo"
 
-    deliver({:session, state.user_id, state.id},
+    deliver({:session, session.user_id, session.id},
             {:text, Poison.encode!(msg)})
 
-    {:ok, state}
+    {:ok, session, state}
 
   end
 
-  def terminate(_state) do
+  def terminate(_session, _state) do
     :ok
   end
 

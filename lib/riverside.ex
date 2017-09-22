@@ -1,34 +1,37 @@
 defmodule Riverside do
 
-  alias Riverside.State
+  alias Riverside.Session
   alias Riverside.Authenticator
 
   defmodule Behaviour do
 
-    @callback __handle_authentication__(:cowboy_req.req)
+    @callback __handle_authentication__(req :: :cowboy_req.req)
       :: Authenticator.auth_result
 
     @callback __connection_timeout__() :: non_neg_integer
 
-    @callback __handle_data__(Riverside.MessageDecoder.frame_type, binary, State.t)
-      :: {:ok, State.t}
+    @callback __handle_data__(frame_type :: Riverside.MessageDecoder.frame_type,
+                              message :: binary,
+                              session :: Session.t,
+                              state :: any)
+      :: {:ok, Session.t}
        | {:error, :invalid_message}
        | {:error, :unsupported}
 
-    @callback authenticate(Authenticator.cred_type, map, map)
+    @callback authenticate(cred_type :: Authenticator.cred_type, params :: map)
       :: Authenticator.callback_result
 
-    @callback init(State.t)
-      :: {:ok, State.t}
+    @callback init(session :: Session.t, state :: any)
+      :: {:ok, Session.t, any}
        | {:error, any}
 
-    @callback handle_message(any, State.t)
-      :: {:ok, State.t}
+    @callback handle_message(message :: any, session :: Session.t, state :: any)
+      :: {:ok, Session.t, any}
 
-    @callback handle_info(any, State.t)
-      :: {:ok, State.t}
+    @callback handle_info(info :: any, session :: Session.t, state :: any)
+      :: {:ok, Session.t}
 
-    @callback terminate(State.t)
+    @callback terminate(session :: Session.t, state :: any)
       :: :ok
 
   end
@@ -52,12 +55,10 @@ defmodule Riverside do
         close: 2
       ]
 
-      import Riverside.Session.State, only: [trap_exit: 2]
+      import Riverside.Session, only: [trap_exit: 2]
 
       @impl true
-      def __connection_timeout__ do
-        @connection_timeout
-      end
+      def __connection_timeout__, do: @connection_timeout
 
       @impl true
       def __handle_authentication__(req) do
@@ -73,7 +74,7 @@ defmodule Riverside do
         Logger.debug "WebSocket - Default Authentication"
 
         Riverside.Authenticator.Default.authenticate(req, [],
-          &(authenticate(&1, params, %{})))
+          &(authenticate(&1, params)))
       end
 
       defp __start_authentication__({:bearer_token, realm}, params, req) do
@@ -81,7 +82,7 @@ defmodule Riverside do
         Logger.debug "WebSocket - BearerToken Authentication"
 
         Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, %{})))
+          &(authenticate(&1, params)))
       end
 
       defp __start_authentication__({:basic, realm}, params, req) do
@@ -89,7 +90,7 @@ defmodule Riverside do
         Logger.debug "WebSocket - Basic Authentication"
 
         Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, %{})))
+          &(authenticate(&1, params)))
       end
 
       defp __start_authentication__(cred, _params, req) do
@@ -100,14 +101,14 @@ defmodule Riverside do
 
       end
 
-      def __handle_data__(frame_type, data, state) do
+      def __handle_data__(frame_type, data, session, state) do
 
         if @message_decoder.supports_frame_type?(frame_type) do
 
           case @message_decoder.decode(data) do
 
             {:ok, message} ->
-              handle_message(message, state)
+              handle_message(message, session, state)
 
             {:error, _reason} ->
               {:error, :invalid_message}
@@ -125,36 +126,26 @@ defmodule Riverside do
       end
 
       @impl true
-      def authenticate(_cred, _queries, _stash) do
-        {:error, :invalid_request}
-      end
+      def authenticate(_cred, _queries), do: {:error, :invalid_request}
 
       @impl true
-      def init(state) do
-        {:ok, state}
-      end
+      def init(session, state), do: {:ok, session, state}
 
       @impl true
-      def handle_info(event, state) do
-        {:ok, state}
-      end
+      def handle_info(event, session, state), do: {:ok, session, state}
 
       @impl true
-      def handle_message(_msg, state) do
-        {:ok, state}
-      end
+      def handle_message(_msg, session, state), do: {:ok, session, state}
 
       @impl true
-      def terminate(_state) do
-        :ok
-      end
+      def terminate(_session, _state), do: :ok
 
       defoverridable [
-        authenticate: 3,
-        init: 1,
-        handle_info: 2,
-        handle_message: 2,
-        terminate: 1
+        authenticate: 2,
+        init: 2,
+        handle_info: 3,
+        handle_message: 3,
+        terminate: 2
       ]
 
     end

@@ -6,8 +6,22 @@ defmodule Riverside.Connection do
 
   alias Riverside.LocalDelivery
   alias Riverside.PeerInfo
-  alias Riverside.Session.State
+  alias Riverside.Session
   alias Riverside.Stats
+
+  @type t :: %__MODULE__{handler:       module,
+                         session:       Session.t,
+                         handler_state: any}
+
+  defstruct handler:       nil,
+            session:       nil,
+            handler_state: nil
+
+  def new(handler, user_id, peer, handler_state) do
+    %__MODULE__{handler:       handler,
+                session:       Session.new(user_id, peer),
+                handler_state: handler_state}
+  end
 
   def init(_, req, opts) do
 
@@ -15,13 +29,13 @@ defmodule Riverside.Connection do
 
     Logger.info "WebSocket - incoming new request: #{peer}"
 
-    mod = Keyword.fetch!(opts, :session_module)
+    handler = Keyword.fetch!(opts, :handler)
 
-    case mod.__handle_authentication__(req) do
+    case handler.__handle_authentication__(req) do
 
-      {:ok, user_id, stash} ->
-        state = State.new(user_id, peer, stash)
-        {:upgrade, :protocol, :cowboy_websocket, req, {mod, state}}
+      {:ok, user_id, handler_state} ->
+        state = new(handler, user_id, peer, handler_state)
+        {:upgrade, :protocol, :cowboy_websocket, req, state}
 
       {:error, :bad_request, req2} ->
         Logger.info "WebSocket - failed to authenticate, shutdown"
@@ -34,9 +48,9 @@ defmodule Riverside.Connection do
     end
   end
 
-  def websocket_init(_type, req, {mod, state}) do
+  def websocket_init(_type, req, state) do
 
-    Logger.info "#{state} setup"
+    Logger.info "#{state.session} @init"
 
     Process.flag(:trap_exit, true)
 
@@ -44,121 +58,124 @@ defmodule Riverside.Connection do
 
     Stats.countup_connections()
 
-    LocalDelivery.register(state.user_id, state.id)
+    LocalDelivery.register(state.session.user_id, state.session.id)
 
-    timeout = mod.__connection_timeout__
+    timeout = state.handler.__connection_timeout__
 
-    {:ok, :cowboy_req.compact(req), {mod, state}, timeout, :hibernate}
+    {:ok, :cowboy_req.compact(req), state, timeout, :hibernate}
 
   end
 
-  def websocket_info(:post_init, req, {mod, state}) do
+  def websocket_info(:post_init, req, state) do
 
-    Logger.debug "#{state} info: post_init"
+    Logger.debug "#{state.session} @post_init"
 
-    case mod.init(state) do
+    case state.handler.init(state.session, state.handler_state) do
 
-      {:ok, state2} ->
-        {:ok, req, {mod, state2}, :hibernate}
+      {:ok, session2, handler_state2} ->
+        state2 = %{state| session: session2, handler_state: handler_state2}
+        {:ok, req, state2, :hibernate}
 
       {:error, reason} ->
-        Logger.info "#{state} failed to initialize: #{inspect reason}"
-        {:shutdown, req, {mod, state}}
+        Logger.info "#{state.session} failed to initialize: #{inspect reason}"
+        {:shutdown, req, state}
 
     end
 
   end
 
-  def websocket_info(:stop, req, {mod, state}) do
+  def websocket_info(:stop, req, state) do
 
-    Logger.debug "#{state} info: stop"
+    Logger.debug "#{state.session} @stop"
 
-    {:shutdown, req, {mod, state}}
+    {:shutdown, req, state}
   end
 
-  def websocket_info({:deliver, type, msg}, req, {mod, state}) do
+  def websocket_info({:deliver, type, msg}, req, state) do
 
-    Logger.debug "#{state} info: deliver"
+    Logger.debug "#{state.session} @deliver"
 
-    {:reply, {type, msg}, req, {mod, state}, :hibernate}
+    {:reply, {type, msg}, req, state, :hibernate}
   end
 
-  def websocket_info({:EXIT, pid, reason}, req, {mod, state}) do
+  def websocket_info({:EXIT, pid, reason}, req, %{session: session}=state) do
 
-    Logger.debug "#{state} info: EXIT <FROM:#{inspect pid}> to <SELF:#{inspect self()}>"
+    Logger.debug "#{session} @exit: #{inspect pid} -> #{inspect self()}"
 
-    if State.should_delegate_exit?(state, pid) do
+    if session.should_delegate_exit?(session, pid) do
 
-      state2 = State.forget_to_trap_exit(state, pid)
-      execute_session_handle_info({:EXIT, pid, reason}, req, {mod, state2})
+      session2 = session.forget_to_trap_exit(session, pid)
+      state2   = %{state| session: session2}
+      handler_handle_info({:EXIT, pid, reason}, req, state2)
 
     else
 
-      {:shutdown, req, {mod, state}}
+      {:shutdown, req, state}
 
     end
 
   end
 
-  def websocket_info(event, req, {mod, state}) do
+  def websocket_info(event, req, state) do
 
-    Logger.info "#{state} info: #{inspect event}"
+    Logger.info "#{state.session} @info: #{inspect event}"
 
-    execute_session_handle_info(event, req, {mod, state})
+    handler_handle_info(event, req, state)
 
   end
 
-  defp execute_session_handle_info(event, req, {mod, state}) do
+  defp handler_handle_info(event, req, state) do
 
-    case mod.handle_info(event, state) do
+    case state.handler.handle_info(event, state.session, state.handler_state) do
 
-      {:ok, state2} ->
-        {:ok, req, {mod, state2}}
+      {:ok, session2, handler_state2} ->
+        state2 = %{state| session: session2, handler_state: handler_state2}
+        {:ok, req, state2}
 
       # TODO support reply?
       _other ->
-        {:shutdown, req, {mod, state}}
+        {:shutdown, req, state}
     end
 
   end
 
-  def websocket_handle({:ping, data}, req, {mod, state}) do
+  def websocket_handle({:ping, data}, req, state) do
 
-    Logger.debug "#{state} incoming PING frame"
+    Logger.debug "#{state.session} @ping"
 
-    handle_frame(req, :ping, data, {mod, state})
-
-  end
-
-  def websocket_handle({:binary, data}, req, {mod, state}) do
-
-    Logger.debug "#{state} incoming BINARY frame"
-
-    handle_frame(req, :binary, data, {mod, state})
+    handle_frame(req, :ping, data, state)
 
   end
 
-  def websocket_handle({:text, data}, req, {mod, state}) do
+  def websocket_handle({:binary, data}, req, state) do
 
-    Logger.debug "#{state} incoming TEXT frame"
+    Logger.debug "#{state.session} @binary"
 
-    handle_frame(req, :text, data, {mod, state})
-
-  end
-
-  def websocket_handle(event, req, {mod, state}) do
-
-    Logger.debug "#{state} handle: unsupported event #{inspect event}"
-
-    {:ok, req, {mod, state}}
+    handle_frame(req, :binary, data, state)
 
   end
 
-  def websocket_terminate(reason, _req, {mod, state}) do
+  def websocket_handle({:text, data}, req, state) do
 
-    Logger.info "#{state} :terminate #{inspect reason}"
+    Logger.debug "#{state.session} @text"
 
-    mod.terminate(state)
+    handle_frame(req, :text, data, state)
+
+  end
+
+  def websocket_handle(event, req, state) do
+
+    Logger.debug "#{state.session} handle: unsupported event #{inspect event}"
+
+    {:ok, req, state}
+
+  end
+
+  def websocket_terminate(reason, _req, state) do
+
+    Logger.info "#{state.session} @terminate: #{inspect reason}"
+
+    state.handler.terminate(state.session, state.handler_state)
 
     Stats.countdown_connections()
 
@@ -166,33 +183,42 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_frame(req, type, data, {mod, state}) do
+  defp handle_frame(req, type, data, %{session: session}=state) do
 
     Stats.countup_messages()
 
-    case State.countup_messages(state) do
+    case Session.countup_messages(session) do
 
-      {:ok, state2} ->
-        case handle_data(type, data, {mod, state2}) do
+      {:ok, session2} ->
+        state2 = %{state| session: session2}
+        case handle_data(type, data, state2) do
 
-          {:ok, state3} -> {:ok, req, {mod, state3}, :hibernate}
+          {:ok, session3, handler_state3} ->
+            state3 = %{state2| session: session3, handler_state: handler_state3}
+            {:ok, req, state3, :hibernate}
 
           {:error, reason} ->
-            Logger.info "#{state2} failed to handle frame: #{inspect reason}"
-            {:ok, req, {mod, state2}}
+            Logger.info "#{session2} failed to handle frame: #{inspect reason}"
+            {:ok, req, state2}
 
         end
 
       {:error, :too_many_messages} ->
-        Logger.warn "#{state} too many messages: #{State.peer_address(state)}"
-        {:shutdown, req, {mod, state}}
+        Logger.warn "#{session} too many messages: #{session.peer_address(session)}"
+        {:shutdown, req, state}
 
     end
 
   end
 
-  defp handle_data(:text, data, {mod, state}), do: mod.__handle_data__(:text, data, state)
-  defp handle_data(:binary, data, {mod, state}), do: mod.__handle_data__(:binary, data, state)
-  defp handle_data(:ping, _data, {_mod, _state}), do: :ok
+  defp handle_data(:text, data, state) do
+    state.handler.__handle_data__(:text, data, state.session, state.handler_state)
+  end
+  defp handle_data(:binary, data, state) do
+    state.handler.__handle_data__(:binary, data, state.session, state.handler_state)
+  end
+  defp handle_data(:ping, _data, state) do
+    {:ok, state.session, state.handler_state}
+  end
 
 end

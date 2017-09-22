@@ -1,4 +1,4 @@
-defmodule Riverside.Session.State do
+defmodule Riverside.Session do
 
   @abbreviation_header "Session"
   @session_id_length 20
@@ -11,18 +11,16 @@ defmodule Riverside.Session.State do
                          abbreviation:    String.t,
                          message_counter: MessageCounter.t,
                          peer:            PeerInfo.t,
-                         trapping_pids:   MapSet.t,
-                         stash:           map}
+                         trapping_pids:   MapSet.t}
 
   defstruct user_id:         0,
             id:              "",
             abbreviation:    "",
             message_counter: nil,
             peer:            nil,
-            trapping_pids:   nil,
-            stash:           %{}
+            trapping_pids:   nil
 
-  def new(user_id, peer, stash) do
+  def new(user_id, peer) do
 
     session_id = create_session_id()
     abbreviation = create_abbreviation(user_id, session_id)
@@ -32,8 +30,7 @@ defmodule Riverside.Session.State do
                 abbreviation:    abbreviation,
                 message_counter: MessageCounter.new(),
                 trapping_pids:   MapSet.new(),
-                peer:            peer,
-                stash:           stash}
+                peer:            peer}
   end
 
   defp create_session_id() do
@@ -82,11 +79,11 @@ defmodule Riverside.Session.State do
 
 end
 
-defimpl String.Chars, for: Riverside.Session.State do
+defimpl String.Chars, for: Riverside.Session do
 
-  alias Riverside.Session.State
+  alias Riverside.Session
 
-  def to_string(%State{abbreviation: abbreviation}) do
+  def to_string(%Session{abbreviation: abbreviation}) do
     abbreviation
   end
 

@@ -43,7 +43,7 @@ defmodule Riverside.Supervisor do
   defp dispatch_opts(module, router, path) do
     [
       {:_, [
-        {path, Riverside.Connection, [session_module: module]},
+        {path, Riverside.Connection, [handler: module]},
         {:_, Plug.Adapters.Cowboy.Handler, {router, []}}
       ]}
     ]
