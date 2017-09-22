@@ -83,29 +83,44 @@ defmodule Riverside.Connection do
     {:reply, {type, msg}, req, {mod, state}, :hibernate}
   end
 
-  def websocket_info({:EXIT, pid, _reason}, req, {mod, state}) do
+  def websocket_info({:EXIT, pid, reason}, req, {mod, state}) do
 
     Logger.debug "#{state} info: EXIT <FROM:#{inspect pid}> to <SELF:#{inspect self()}>"
 
-    {:shutdown, req, {mod, state}}
+    if State.should_delegate_exit?(state, pid) do
+
+      state2 = State.forget_to_trap_exit(state, pid)
+      execute_session_handle_info({:EXIT, pid, reason}, req, {mod, state2})
+
+    else
+
+      {:shutdown, req, {mod, state}}
+
+    end
 
   end
 
-  # TODO support handle_info on session module
-  #
-  #def websocket_info(event, req, {mod, state}) do
+  def websocket_info(event, req, {mod, state}) do
 
-  #  Logger.info "#{state} info: unsupported event #{inspect event}"
+    Logger.info "#{state} info: #{inspect event}"
 
-  #  case mod.handle_info(event, state) do
-  #    {:ok, state2} ->
-  #      {:ok, req, {mod, state2}}
-  #    # TODO
-  #    _other ->
-  #      {:shutdown, req, {mod, state}}
-  #  end
+    execute_session_handle_info(event, req, {mod, state})
 
-  #end
+  end
+
+  defp execute_session_handle_info(event, req, {mod, state}) do
+
+    case mod.handle_info(event, state) do
+
+      {:ok, state2} ->
+        {:ok, req, {mod, state2}}
+
+      # TODO support reply?
+      _other ->
+        {:shutdown, req, {mod, state}}
+    end
+
+  end
 
   def websocket_handle({:ping, data}, req, {mod, state}) do
 

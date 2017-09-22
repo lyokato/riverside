@@ -25,6 +25,9 @@ defmodule Riverside do
     @callback handle_message(any, State.t)
       :: {:ok, State.t}
 
+    @callback handle_info(any, State.t)
+      :: {:ok, State.t}
+
     @callback terminate(State.t)
       :: :ok
 
@@ -130,6 +133,11 @@ defmodule Riverside do
       end
 
       @impl true
+      def handle_info(event, state) do
+        {:ok, state}
+      end
+
+      @impl true
       def handle_message(_msg, state) do
         {:ok, state}
       end
@@ -142,6 +150,7 @@ defmodule Riverside do
       defoverridable [
         authenticate: 3,
         init: 1,
+        handle_info: 2,
         handle_message: 2,
         terminate: 1
       ]

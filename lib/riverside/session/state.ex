@@ -11,6 +11,7 @@ defmodule Riverside.Session.State do
                          abbreviation:    String.t,
                          message_counter: MessageCounter.t,
                          peer:            PeerInfo.t,
+                         trapping_pids:   MapSet.t,
                          stash:           map}
 
   defstruct user_id:         0,
@@ -18,6 +19,7 @@ defmodule Riverside.Session.State do
             abbreviation:    "",
             message_counter: nil,
             peer:            nil,
+            trapping_pids:   nil,
             stash:           %{}
 
   def new(user_id, peer, stash) do
@@ -29,6 +31,7 @@ defmodule Riverside.Session.State do
                 id:              session_id,
                 abbreviation:    abbreviation,
                 message_counter: MessageCounter.new(),
+                trapping_pids:   MapSet.new(),
                 peer:            peer,
                 stash:           stash}
   end
@@ -40,6 +43,27 @@ defmodule Riverside.Session.State do
   defp create_abbreviation(user_id, session_id) do
     "<#{@abbreviation_header}:#{user_id}:#{String.slice(session_id, 0..5)}>"
   end
+
+  @spec should_delegate_exit?(t, pid) :: boolean
+
+  def should_delegate_exit?(state, pid) do
+    MapSet.member?(state.trapping_pids.member, pid)
+  end
+
+  @spec trap_exit(t, pid) :: t
+
+  def trap_exit(%{trapping_pids: pids}=state, pid) do
+    %{state |trapping_pids: MapSet.put(pids, pid)}
+  end
+
+  @spec forget_to_trap_exit(t, pid) :: t
+
+  def forget_to_trap_exit(%{trapping_pids: pids}=state, pid) do
+    %{state |trapping_pids: MapSet.delete(pids, pid)}
+  end
+
+  @spec countup_messages(t) :: {:ok, t}
+    | {:error, :too_many_messages}
 
   def countup_messages(%{message_counter: counter}=state) do
     case MessageCounter.countup(counter) do
