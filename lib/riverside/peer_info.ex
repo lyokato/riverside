@@ -1,5 +1,7 @@
 defmodule Riverside.PeerInfo do
 
+  alias Riverside.Util.CowboyUtil
+
   @type t :: %__MODULE__{address:         :inet.ip_address,
                          port:            :inet.port_number,
                          x_forwarded_for: String.t}
@@ -9,19 +11,13 @@ defmodule Riverside.PeerInfo do
             x_forwarded_for: nil
 
   def gather(req) do
-    {{address, port}, _} = :cowboy_req.peer(req)
-    x_forwarded_for      = parse_x_forwarded_for_header(req)
+
+    {address, port, x_forwarded_for} = CowboyUtil.peer(req)
 
     %__MODULE__{address:         address,
                 port:            port,
                 x_forwarded_for: x_forwarded_for}
-  end
 
-  defp parse_x_forwarded_for_header(req) do
-    case :cowboy_req.parse_header("x-forwarded-for", req) do
-      {:ok, [head|_tail], _} -> head
-      _                      -> ""
-    end
   end
 
 end

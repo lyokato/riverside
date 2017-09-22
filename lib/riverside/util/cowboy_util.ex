@@ -52,4 +52,21 @@ defmodule Riverside.Util.CowboyUtil do
     {:error, :not_found}
   end
 
+  @spec peer(:cowboy_req.req)
+    :: {:inet.ip_address, :inet.port_number, String.t}
+
+  def peer(req) do
+    {{address, port}, _} = :cowboy_req.peer(req)
+    {address, port, x_forwarded_for(req)}
+  end
+
+  @spec x_forwarded_for(:cowboy_req.req) :: String.t
+
+  def x_forwarded_for(req) do
+    case :cowboy_req.parse_header("x-forwarded-for", req) do
+      {:ok, [head|_tail], _} -> head
+      _                      -> ""
+    end
+  end
+
 end
