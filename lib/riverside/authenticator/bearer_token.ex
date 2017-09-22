@@ -8,7 +8,7 @@ defmodule Riverside.Authenticator.BearerToken do
 
   def authenticate(req, opts, f) do
 
-    realm = Keyword.get(opts, "realm", "")
+    realm = Keyword.get(opts, :realm, "")
 
     with {:ok, token}          <- CowboyUtil.bearer_auth_credential(req),
          {:ok, user_id, stash} <- f.({:bearer_token, token}) do

@@ -5,13 +5,18 @@ defmodule Riverside do
 
   defmodule Behaviour do
 
-    @callback authenticate(Authenticator.cred_type, map, map) :: Authenticator.callback_result
+    @callback authenticate(Authenticator.cred_type, map, map)
+      :: Authenticator.callback_result
 
-    @callback init(State.t) :: {:ok, State.t} | {:error, any}
+    @callback init(State.t)
+      :: {:ok, State.t}
+       | {:error, any}
 
-    @callback handle_message(any, State.t) :: {:ok, State.t}
+    @callback handle_message(any, State.t)
+      :: {:ok, State.t}
 
-    @callback terminate(State.t) :: :ok
+    @callback terminate(State.t)
+      :: :ok
 
   end
 

@@ -220,7 +220,7 @@ defmodule Riverside.Connection do
     Logger.debug "WebSocket - Default Authentication"
 
     Authenticator.Default.authenticate(req, [], fn cred ->
-      mod.authenticate(cred, params, %{})
+      execute_session_authentication(mod, cred, params)
     end)
 
   end
@@ -230,7 +230,7 @@ defmodule Riverside.Connection do
     Logger.debug "WebSocket - BearerToken Authentication"
 
     Authenticator.BearerToken.authenticate(req, [realm: realm], fn cred ->
-      mod.authenticate(cred, params, %{})
+      execute_session_authentication(mod, cred, params)
     end)
 
   end
@@ -240,9 +240,19 @@ defmodule Riverside.Connection do
     Logger.debug "WebSocket - Basic Authentication"
 
     Authenticator.Basic.authenticate(req, [realm: realm], fn cred ->
-      mod.authenticate(cred, params, %{})
+      execute_session_authentication(mod, cred, params)
     end)
 
+  end
+
+  defp execute_session_authentication(mod, cred, params) do
+    try do
+      mod.authenticate(cred, params, %{})
+    catch
+      err ->
+        stacktrace = Exception.format_stacktrace(System.stacktrace())
+        Logger.error "#{inspect err} #{inspect stacktrace}"
+    end
   end
 
 end

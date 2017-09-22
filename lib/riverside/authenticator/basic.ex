@@ -8,7 +8,7 @@ defmodule Riverside.Authenticator.Basic do
 
   def authenticate(req, opts, f) do
 
-    realm = Keyword.get(opts, "realm", "")
+    realm = Keyword.get(opts, :realm, "")
 
     with {:ok, username, password} <- CowboyUtil.basic_auth_credential(req),
          {:ok, user_id, stash}     <- f.({:basic, username, password}) do

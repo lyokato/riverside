@@ -10,10 +10,10 @@ defmodule Riverside.Spec do
 
       supervisor(Riverside.Supervisor,[opts]),
 
-     worker(GracefulStopper.Plug,
-       [[timeout: 0, endpoint: Riverside.Supervisor]],
-        [shutdown: 10_000]
-      )
+      worker(GracefulStopper.Plug,
+        [[timeout: 0, endpoint: Riverside.Supervisor]],
+         [shutdown: 10_000]
+       )
     ]
 
   end

@@ -2,6 +2,9 @@ defmodule Riverside.Supervisor do
 
   use Supervisor
 
+  @default_port 3000
+  @default_path "/"
+
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
@@ -21,9 +24,9 @@ defmodule Riverside.Supervisor do
 
   defp cowboy_opts(router, opts) do
 
-    module = Keyword.fetch!(opts, :module)
-    port   = Keyword.fetch!(opts, :port)
-    path   = Keyword.fetch!(opts, :path)
+    module = session_module(opts)
+    port   = Keyword.get(opts, :port, @default_port)
+    path   = Keyword.get(opts, :path, @default_path)
 
     cowboy_opts = [port: port, dispatch: dispatch_opts(module, router, path)]
 
@@ -33,6 +36,15 @@ defmodule Riverside.Supervisor do
       cowboy_opts
     end
 
+  end
+
+  defp session_module(opts) do
+    module = Keyword.get(opts, :session) ||
+      raise ArgumentError, "missing :session opts"
+    unless Code.ensure_loaded?(module) do
+      raise ArgumentError, "#{module} not compiled, ensure the name is correct and it's included in project dependencies."
+    end
+    module
   end
 
   defp dispatch_opts(module, router, path) do
