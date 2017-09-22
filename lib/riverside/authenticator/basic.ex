@@ -34,7 +34,8 @@ defmodule Riverside.Authenticator.Basic do
   end
 
   defp put_authenticate_header(req, code, realm) do
-    CowboyUtil.auth_error_response(code, "WWW-Authenticate", "Basic realm=\"#{realm}\"")
+    CowboyUtil.auth_error_response(req, code,
+      "WWW-Authenticate", "Basic realm=\"#{realm}\"")
   end
 
 end

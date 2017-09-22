@@ -7,7 +7,7 @@ defmodule Riverside.Util.CowboyUtil do
     queries |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
   end
 
-  @spec auth_error_response(:cowboy_req.req, String.t, String.t) :: :cowboy_req.req
+  @spec auth_error_response(:cowboy_req.req, non_neg_integer, String.t, String.t) :: :cowboy_req.req
 
   def auth_error_response(req, code, name, value) do
     {:ok, req2} = :cowboy_req.reply(code, [{name, value}], req)
@@ -45,10 +45,10 @@ defmodule Riverside.Util.CowboyUtil do
         {:error, :not_found}
     end
   end
-  defp bearer_token("bearer", cred) do
+  defp bearer_auth_token("bearer", cred) do
     {:ok, cred}
   end
-  defp bearer_token(_type, _cred) do
+  defp bearer_auth_token(_type, _cred) do
     {:error, :not_found}
   end
 

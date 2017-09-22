@@ -2,7 +2,7 @@ defmodule Riverside.Authenticator.BearerToken do
 
   @behaviour Riverside.Authenticator.Behaviour
 
-  @alias Riverside.Util.CowboyUtil
+  alias Riverside.Util.CowboyUtil
 
   require Logger
 
