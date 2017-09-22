@@ -10,6 +10,7 @@ defmodule Riverside.Connection do
   alias Riverside.PeerInfo
   alias Riverside.Session.State
   alias Riverside.Stats
+  alias Riverside.Util.CowboyUtil
 
   @default_timeout 120_000
 
@@ -21,10 +22,10 @@ defmodule Riverside.Connection do
 
     mod = Keyword.fetch!(opts, :session_module)
 
-    {queries, _} = :cowboy_req.qs_vals(req)
-    params = queries |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
-
     auth_type = Application.get_env(:riverside, :authentication, :default)
+
+    params = CowboyUtil.query_map(req)
+
     case handle_authentication(auth_type, params, req, mod) do
 
       {:ok, user_id, stash} ->
