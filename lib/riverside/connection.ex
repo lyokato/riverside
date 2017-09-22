@@ -5,7 +5,6 @@ defmodule Riverside.Connection do
   require Logger
 
   alias Riverside.LocalDelivery
-  alias Riverside.MessageDecoder.JsonDecoder
   alias Riverside.PeerInfo
   alias Riverside.Session.State
   alias Riverside.Stats
@@ -18,7 +17,7 @@ defmodule Riverside.Connection do
 
     mod = Keyword.fetch!(opts, :session_module)
 
-    case mod.__authenticate__(req) do
+    case mod.__handle_authentication__(req) do
 
       {:ok, user_id, stash} ->
         state = State.new(user_id, peer, stash)
@@ -152,16 +151,16 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_frame(req, frame_type, data, {mod, state}) do
+  defp handle_frame(req, type, data, {mod, state}) do
 
     Stats.countup_messages()
 
     case State.countup_messages(state) do
 
       {:ok, state2} ->
-        case handle_data(frame_type, data, {mod, state2}) do
+        case handle_data(type, data, {mod, state2}) do
 
-          {:ok, state3} -> {:ok, req, {mod, state3}}
+          {:ok, state3} -> {:ok, req, {mod, state3}, :hibernate}
 
           {:error, reason} ->
             Logger.info "#{state2} failed to handle frame: #{inspect reason}"
@@ -177,34 +176,7 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_data(:ping, _data, {_mod, _state}) do
-    :ok
-  end
-
-  defp handle_data(frame_type, data, {mod, state}) do
-
-    decoder = Application.get_env(:riverside, :message_decoder, JsonDecoder)
-
-    if decoder.supports_frame_type?(frame_type) do
-
-      case decoder.decode(data) do
-
-        {:ok, message} ->
-          mod.handle_message(message, state)
-
-        {:error, _reason} ->
-          {:error, :invalid_message}
-
-      end
-
-    else
-
-      Logger.debug "#{state} unsupported frame type: #{frame_type}"
-
-      {:error, :unsupported}
-
-    end
-
-  end
+  defp handle_data(:ping, _data, {_mod, _state}), do: :ok
+  defp handle_data(type, data, {mod, state}),     do: mod.__handle_data__(type, data, state)
 
 end

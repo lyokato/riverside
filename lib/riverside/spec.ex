@@ -1,7 +1,6 @@
 defmodule Riverside.Spec do
 
   @doc """
-  children(opts)
 
   Create a list of spec to supervise.
 
@@ -22,7 +21,7 @@ defmodule Riverside.Spec do
 
   * session (required): Session module
   * port (optional): port number on which websocket server use. set 3000 as default.
-  * path (optional) : WebSocket endpoint URL path. set "/" as default.
+  * path (optional): WebSocket endpoint URL path. set "/" as default.
   * reuse_port(optional): set false as default
 
   """

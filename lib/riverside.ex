@@ -5,10 +5,15 @@ defmodule Riverside do
 
   defmodule Behaviour do
 
-    @callback __authenticate__(:cowboy_req.req)
+    @callback __handle_authentication__(:cowboy_req.req)
       :: Authenticator.auth_result
 
     @callback __connection_timeout__() :: non_neg_integer
+
+    @callback __handle_data__(Riverside.MessageDecoder.frame_type, binary, State.t)
+      :: {:ok, State.t}
+       | {:error, :invalid_message}
+       | {:error, :unsupported}
 
     @callback authenticate(Authenticator.cred_type, map, map)
       :: Authenticator.callback_result
@@ -32,8 +37,10 @@ defmodule Riverside do
 
       @behaviour Riverside.Behaviour
 
-      @auth_type          Keyword.get(opts, :authentication,     :default)
+      @auth_type Keyword.get(opts, :authentication, :default)
       @connection_timeout Keyword.get(opts, :connection_timeout, 120_000)
+      @messge_decoder Application.get_env(:riverside, :message_decoder,
+        Riverside.MessageDecoder.JsonDecoder)
 
       import Riverside.LocalDelivery, only: [
         deliver: 2,
@@ -48,7 +55,7 @@ defmodule Riverside do
       end
 
       @impl true
-      def __authenticate__(req) do
+      def __handle_authentication__(req) do
         params = Riverside.Util.CowboyUtil.query_map(req)
         __start_authentication__(@auth_type, params, req)
       end
@@ -71,6 +78,30 @@ defmodule Riverside do
       defp __start_authentication__(cred, _params, req) do
         Logger.warn "Unsupported authentication credential: #{inspect cred}"
         {:error, :invalid_request, req}
+      end
+
+      def __handle_data__(frame_type, data, state) do
+
+        if @message_decoder.supports_frame_type?(frame_type) do
+
+          case @message_decoder.decode(data) do
+
+            {:ok, message} ->
+              handle_message(message, state)
+
+            {:error, _reason} ->
+              {:error, :invalid_message}
+
+          end
+
+        else
+
+          Logger.debug "#{state} unsupported frame type: #{frame_type}"
+
+          {:error, :unsupported}
+
+        end
+
       end
 
       @impl true
