@@ -16,7 +16,7 @@ defmodule Example.Bootstrap do
     opts = [strategy: :one_for_one,
             name:     Example.Supervisor]
 
-    Riverside.Spec.children(Example.Session, port: 3000, path: "/")
+    Riverside.Spec.children(Example.Handler, port: 3000, path: "/")
     |> Supervisor.start_link(opts)
   end
 

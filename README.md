@@ -17,39 +17,49 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/riverside](https://hexdocs.pm/riverside).
 
-## Usage
+## Usage Example
 
 ```elixir
 
-defmodule YourApp.Session do
+config :my_app, MyApp.Handler,
+  authentication: {:basic, "example.org"},
+  codec: Riverside.Codec.JSON,
+  connection_timeout: 120_000
+
+defmodule YourApp.Handler do
 
   require Logger
 
-  use Riverside
+  use Riverside, otp_app: :my_app
 
   @impl true
-  def authenticate({:basic, username, password}, queries, stash) do
+  def authenticate({:basic, username, password}, params) do
 
     case YourApp.Authenticator.authenticate(username, password) do
-      {:ok, user_id} -> {:ok, user_id, stash}
-      _other         -> {:error, :invalid_request}
+      {:ok, user_id}             -> {:ok, user_id, %{}
+      {:error, :invalid_request} -> {:error, :invalid_request}
+      _other                     -> {:error, :server_error}
     end
 
   end
-  def authenticate(_credentials, _queries, _stash) do
 
-    {:error, :invalid_request}
-
+  @impl true
+  def init(session, state) do
+    {:ok, session, state}
   end
 
   @impl true
-  def init(session) do
-    {:ok, session}
-  end
+  def handle_message(incoming_message, session, state) do
 
-  @impl true
-  def handle_message(message, session) do
-    {:ok, session}
+    user_id = incoming_message["to"]
+    content = incoming_message["content"]
+
+    outgoing_message = %{from:    session.user_id,
+                         content: content}
+
+    deliver({:user, user_id}, outgoing_message)
+
+    {:ok, session, state}
   end
 
   @impl true
@@ -60,43 +70,25 @@ defmodule YourApp.Session do
 end
 ```
 
-config.exs
-
-```elixir
-```
-
 your application starter.
 
 ```elixir
 
+riverside_children = Riverside.Spec.child_spec(YourApp.Handler, port: 3000, path: "/"])
 
 ```
 
-### Session Module
+### Handler Module
 
-Define your own Session module with **Riverside**.
+Define your own Handler module with **Riverside**.
 
 Implement following callback functions which **Riverside** requires.
 
-- authenticate/3
-- init/1
-- handle_message/2
-- terminate
-
-#### authenticate/3
-
-Arguments
-
-* credential - :default, {:basic, username, password}, {:bearer, token}
-* queries - Map contains qury-string params
-* stash - Map kept while this session. at the timing of authentication this is empty. You can put your fovorite preference data.
-
-#### Call Riverside.Spec.child_spec/1
-
-```elixir
-Riverside.Spec.child_spec([port: 3000, path: "/", module: YourApp.Session])
-```
-
+- authenticate/2
+- init/2
+- handle_message/3
+- handle_info/3
+- terminate/2
 
 ## Author
 

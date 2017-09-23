@@ -42,9 +42,11 @@ defmodule Riverside do
 
       @behaviour Riverside.Behaviour
 
-      @auth_type          Keyword.get(opts, :authentication, :default)
-      @connection_timeout Keyword.get(opts, :connection_timeout, 120_000)
-      @codec              Keyword.get(opts, :codec, Riverside.Codec.JSON)
+      config = Riverside.Config.load(__MODULE__, opts)
+
+      @auth_type          Keyword.get(config, :authentication, :default)
+      @connection_timeout Keyword.get(config, :connection_timeout, 120_000)
+      @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
 
       import Riverside.LocalDelivery, only: [
         join_channel: 1,

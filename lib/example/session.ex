@@ -1,11 +1,8 @@
-defmodule Example.Session do
+defmodule Example.Handler do
 
   require Logger
 
-  use Riverside,
-    authentication: {:basic, "exmaple.org"},
-    codec: Riverside.Codec.MessagePack,
-    connection_timeout: 60_000
+  use Riverside, otp_app: :riverside
 
   def authenticate({:basic, username, password}, _queries) do
 

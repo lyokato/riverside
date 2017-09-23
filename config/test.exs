@@ -1,9 +1,9 @@
 use Mix.Config
 
-config :riverside,
-  connection_timeout: 120_000,
-  reuse_port: true,
-  authentication: {:basic, "example.org"}
+config :riverside, Example.Handler,
+    authentication: {:basic, "exmaple.org"},
+    codec: Riverside.Codec.MessagePack,
+    connection_timeout: 60_000
 
 config :logger,
   level: :debug,

@@ -19,8 +19,8 @@ defmodule Riverside.Mixfile do
       :uuid,
       :plug,
       :ebus,
-      :poison
-    #]
+      :poison,
+      :msgpax
       ],
      mod: {Example.Bootstrap, []}]
   end
@@ -33,7 +33,7 @@ defmodule Riverside.Mixfile do
      {:ebus, "~> 0.2.1", hex: :erlbus},
      {:poison, "~> 3.1"},
      {:msgpax, "~> 2.0"},
-     {:ex_doc, "~> 0.15", only: :dev},
+     #{:ex_doc, "~> 0.15", only: :dev},
      {:graceful_stopper, github: "lyokato/graceful_stopper", tag: "0.1.1" },
      {:plug, "~> 1.3"}
     ]
