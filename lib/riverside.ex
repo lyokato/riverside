@@ -10,7 +10,7 @@ defmodule Riverside do
 
     @callback __connection_timeout__() :: non_neg_integer
 
-    @callback __handle_data__(frame_type :: Riverside.MessageDecoder.frame_type,
+    @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
                               message :: binary,
                               session :: Session.t,
                               state :: any)
@@ -44,11 +44,9 @@ defmodule Riverside do
 
       @auth_type Keyword.get(opts, :authentication, :default)
       @connection_timeout Keyword.get(opts, :connection_timeout, 120_000)
-      @message_decoder Application.get_env(:riverside, :message_decoder,
-        Riverside.MessageDecoder.JsonDecoder)
+      @codec Application.get_env(:riverside, :codec, Riverside.Codec.Json)
 
       import Riverside.LocalDelivery, only: [
-        deliver: 2,
         join_channel: 1,
         leave_channel: 1
       ]
@@ -101,9 +99,9 @@ defmodule Riverside do
 
       def __handle_data__(frame_type, data, session, state) do
 
-        if @message_decoder.supports_frame_type?(frame_type) do
+        if @codec.frame_type === frame_type do
 
-          case @message_decoder.decode(data) do
+          case @codec.decode(data) do
 
             {:ok, message} ->
               handle_message(message, session, state)
@@ -123,9 +121,47 @@ defmodule Riverside do
 
       end
 
-      @spec deliver_me(frame_type :: Riverside.MessageDecoder.frame_type,
-                       message :: binary) :: no_return
-      def deliver_me(frame_type, message), do: send(self(), {:deliver, frame_type, message})
+      @spec deliver(Riverside.LocalDelivery.destination,
+                    {Riverside.Codec.frame_type, binary}) :: :ok | :error
+      def deliver(dest, {frame_type, message}) do
+        Riverside.LocalDelivery.deliver(dest, {frame_type, message})
+        :ok
+      end
+
+      @spec deliver(Riverside.LocalDelivery.destination, any) :: :ok | :error
+
+      def deliver(dest, data) do
+        case @codec.encode(data) do
+
+          {:ok, value} ->
+            deliver(dest, {@codec.frame_type, value})
+
+          {:error, :invalid_messsage} ->
+            :error
+
+        end
+      end
+
+      @spec deliver_me(frame_type :: Riverside.Codec.frame_type,
+                       message :: binary) :: :ok | :error
+
+      def deliver_me(frame_type, message) do
+        send(self(), {:deliver, frame_type, message})
+        :ok
+      end
+
+      @spec deliver_me(any) :: :ok | :error
+
+      def deliver_me(data) do
+        case @codec.encode(data) do
+
+          {:ok, value} ->
+            deliver_me(@codec.frame_type, value)
+
+          {:error, :invalid_messsage} ->
+            :error
+        end
+      end
 
       @spec close() :: no_return
       def close(), do: send(self(), :stop)

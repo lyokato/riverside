@@ -35,7 +35,7 @@ defmodule Example.Session do
 
     Logger.debug "just echo"
 
-    deliver_me(:text, Poison.encode!(msg))
+    deliver_me(msg)
 
     {:ok, session, state}
 

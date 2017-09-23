@@ -1,5 +1,7 @@
 defmodule Riverside.LocalDelivery do
 
+  alias Riverside.Codec
+
   defmodule Topic do
 
     def channel(channel_id) do
@@ -16,13 +18,11 @@ defmodule Riverside.LocalDelivery do
 
   end
 
-  @type frame_type :: :text | :binary
-
   @type destination :: {:user, non_neg_integer}
                      | {:session, non_neg_integer, String.t}
                      | {:channel, term}
 
-  @spec deliver(destination, {frame_type, any}) :: no_return
+  @spec deliver(destination, {Codec.frame_type, any}) :: no_return
   def deliver({:user, user_id}, {frame_type, message}) do
     Topic.user(user_id)
     |> deliver_message(frame_type, message)
