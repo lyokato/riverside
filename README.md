@@ -1,5 +1,7 @@
 # Riverside
 
+**[WIP] This project is not stable yet**
+
 Simple WebSocket Server Framework for Elixir
 
 ## Installation
