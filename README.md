@@ -36,7 +36,7 @@ defmodule YourApp.Handler do
   def authenticate({:basic, username, password}, params) do
 
     case YourApp.Authenticator.authenticate(username, password) do
-      {:ok, user_id}             -> {:ok, user_id, %{}
+      {:ok, user_id}             -> {:ok, user_id, %{}}
       {:error, :invalid_request} -> {:error, :invalid_request}
       _other                     -> {:error, :server_error}
     end
@@ -57,7 +57,7 @@ defmodule YourApp.Handler do
     outgoing_message = %{from:    session.user_id,
                          content: content}
 
-    deliver({:user, user_id}, outgoing_message)
+    deliver_user(user_id, outgoing_message)
 
     {:ok, session, state}
   end

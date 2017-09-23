@@ -144,6 +144,27 @@ defmodule Riverside do
         end
       end
 
+      @spec deliver_user(user_id :: non_neg_integer,
+                         data    :: any) :: :ok | :error
+
+      def deliver_user(user_id, data) do
+        deliver({:user, user_id}, data)
+      end
+
+      @spec deliver_session(user_id    :: non_neg_integer,
+                            session_id :: non_neg_integer,
+                            data       :: any) :: :ok | :error
+      def deliver_session(user_id, session_id, data) do
+        deliver({:session, user_id, session_id}, data)
+      end
+
+      @spec deliver_channel(channel_id :: any,
+                            data       :: any) :: :ok | :error
+
+      def deliver_channel(channel_id, data) do
+        deliver({:channel, channel_id}, data)
+      end
+
       @spec deliver_me(frame_type :: Riverside.Codec.frame_type,
                        message :: binary) :: :ok | :error
 
