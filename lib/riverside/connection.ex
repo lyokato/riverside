@@ -31,7 +31,7 @@ defmodule Riverside.Connection do
 
     handler = Keyword.fetch!(opts, :handler)
 
-    case handler.__handle_authentication__(req) do
+    case handler.__handle_authentication__(req, peer) do
 
       {:ok, user_id, handler_state} ->
         state = new(handler, user_id, peer, handler_state)
@@ -101,7 +101,9 @@ defmodule Riverside.Connection do
     if Session.should_delegate_exit?(session, pid) do
 
       session2 = Session.forget_to_trap_exit(session, pid)
-      state2   = %{state| session: session2}
+
+      state2 = %{state| session: session2}
+
       handler_handle_info({:EXIT, pid, reason}, req, state2)
 
     else

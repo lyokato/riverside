@@ -4,7 +4,7 @@ defmodule Example.Handler do
 
   use Riverside, otp_app: :riverside
 
-  def authenticate({:basic, username, password}, _queries, _headers) do
+  def authenticate({:basic, username, password}, _queries, _headers, _peer) do
 
     Logger.debug "authenticate - basic #{username}:#{password}"
 

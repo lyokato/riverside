@@ -33,7 +33,7 @@ defmodule YourApp.Handler do
   use Riverside, otp_app: :my_app
 
   @impl true
-  def authenticate({:basic, username, password}, params) do
+  def authenticate({:basic, username, password}, params, headers, peer) do
 
     case YourApp.Authenticator.authenticate(username, password) do
       {:ok, user_id}             -> {:ok, user_id, %{}}
@@ -111,7 +111,7 @@ Define your own Handler module with **Riverside**.
 
 Implement following callback functions which **Riverside** requires.
 
-- authenticate/2
+- authenticate/4
 - init/2
 - handle_message/3
 - handle_info/3

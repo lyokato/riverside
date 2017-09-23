@@ -1,37 +1,48 @@
 defmodule Riverside do
 
-  alias Riverside.Session
   alias Riverside.Authenticator
+  alias Riverside.PeerAddress
+  alias Riverside.Session
 
   defmodule Behaviour do
 
-    @callback __handle_authentication__(req :: :cowboy_req.req)
+    @callback __handle_authentication__(req  :: :cowboy_req.req,
+                                        peer :: PeerAddress.t)
       :: Authenticator.auth_result
 
     @callback __connection_timeout__() :: non_neg_integer
+
     @callback __message_counter_opts__() :: keyword
 
     @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
-                              message :: binary,
-                              session :: Session.t,
-                              state :: any)
+                              message    :: binary,
+                              session    :: Session.t,
+                              state      :: any)
       :: {:ok, Session.t}
        | {:error, :invalid_message | :unsupported }
 
-    @callback authenticate(cred_type :: Authenticator.cred_type, params :: map, headers :: map)
+    @callback authenticate(cred_type :: Authenticator.cred_type,
+                           params    :: map,
+                           headers   :: map,
+                           peer      :: PeerAddress.t)
       :: Authenticator.callback_result
 
     @callback init(session :: Session.t, state :: any)
       :: {:ok, Session.t, any}
        | {:error, any}
 
-    @callback handle_message(message :: any, session :: Session.t, state :: any)
+    @callback handle_message(message :: any,
+                             session :: Session.t,
+                             state   :: any)
       :: {:ok, Session.t, any}
 
-    @callback handle_info(info :: any, session :: Session.t, state :: any)
+    @callback handle_info(info    :: any,
+                          session :: Session.t,
+                          state   :: any)
       :: {:ok, Session.t}
 
-    @callback terminate(session :: Session.t, state :: any)
+    @callback terminate(session :: Session.t,
+                        state   :: any)
       :: :ok
 
   end
@@ -65,40 +76,40 @@ defmodule Riverside do
       def __connection_timeout__, do: @connection_timeout
 
       @impl true
-      def __handle_authentication__(req) do
+      def __handle_authentication__(req, peer) do
 
         params  = Riverside.Util.CowboyUtil.queries(req)
         headers = Riverside.Util.CowboyUtil.headers(req)
 
-        __start_authentication__(@auth_type, params, headers, req)
+        __start_authentication__(@auth_type, params, headers, peer, req)
 
       end
 
-      defp __start_authentication__(:default, params, headers, req) do
+      defp __start_authentication__(:default, params, headers, peer, req) do
 
         Logger.debug "WebSocket - Default Authentication"
 
         Riverside.Authenticator.Default.authenticate(req, [],
-          &(authenticate(&1, params, headers)))
+          &(authenticate(&1, params, headers, peer)))
       end
 
-      defp __start_authentication__({:bearer_token, realm}, params, headers, req) do
+      defp __start_authentication__({:bearer_token, realm}, params, headers, peer, req) do
 
         Logger.debug "WebSocket - BearerToken Authentication"
 
         Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, headers)))
+          &(authenticate(&1, params, headers, peer)))
       end
 
-      defp __start_authentication__({:basic, realm}, params, headers, req) do
+      defp __start_authentication__({:basic, realm}, params, headers, peer, req) do
 
         Logger.debug "WebSocket - Basic Authentication"
 
         Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, headers)))
+          &(authenticate(&1, params, headers, peer)))
       end
 
-      defp __start_authentication__(cred, _params, _headers, req) do
+      defp __start_authentication__(cred, _params, _headers, peer, req) do
 
         Logger.warn "Unsupported authentication credential: #{inspect cred}"
 
@@ -197,7 +208,7 @@ defmodule Riverside do
       def close(), do: send(self(), :stop)
 
       @impl true
-      def authenticate(_cred, _queries, _headers), do: {:error, :invalid_request}
+      def authenticate(_cred, _queries, _headers, _peer), do: {:error, :invalid_request}
 
       @impl true
       def init(session, state), do: {:ok, session, state}
@@ -212,7 +223,7 @@ defmodule Riverside do
       def terminate(_session, _state), do: :ok
 
       defoverridable [
-        authenticate: 3,
+        authenticate: 4,
         init: 2,
         handle_info: 3,
         handle_message: 3,
