@@ -1,4 +1,4 @@
-defmodule Riverside.Codec.JSON do
+defmodule Riverside.Codec.MessagePack do
 
   @behaviour Riverside.Codec
 
@@ -6,18 +6,18 @@ defmodule Riverside.Codec.JSON do
 
   @impl true
   def frame_type do
-    :text
+    :binary
   end
 
   @impl true
   def encode(msg) do
-    case Poison.encode(msg) do
+    case Msgpax.pack(msg) do
 
       {:ok, value} ->
         {:ok, value}
 
       {:error, exception} ->
-        Logger.debug "JSON: failed to encode: #{inspect exception}"
+        Logger.debug "MessagePack: failed to encode: #{inspect exception}"
         {:error, :invalid_message}
 
     end
@@ -25,13 +25,13 @@ defmodule Riverside.Codec.JSON do
 
   @impl true
   def decode(data) do
-      case Poison.decode(data) do
+      case Msgpax.unpack(data) do
 
         {:ok, value} ->
           {:ok, value}
 
         {:error, exception} ->
-          Logger.debug "JSON: failed to decode: #{inspect exception}"
+          Logger.debug "MessagePack: failed to decode: #{inspect exception}"
           {:error, :invalid_message}
 
       end

@@ -4,6 +4,7 @@ defmodule Example.Session do
 
   use Riverside,
     authentication: {:basic, "exmaple.org"},
+    codec: Riverside.Codec.MessagePack,
     connection_timeout: 60_000
 
   def authenticate({:basic, username, password}, _queries) do

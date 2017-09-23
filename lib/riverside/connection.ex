@@ -194,7 +194,7 @@ defmodule Riverside.Connection do
             {:ok, req, state3, :hibernate}
 
           {:error, reason} ->
-            Logger.info "#{session2} failed to handle frame: #{inspect reason}"
+            Logger.info "#{session2} failed to handle frame_type #{inspect type}: #{inspect reason}"
             {:ok, req, state2}
 
         end

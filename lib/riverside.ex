@@ -42,9 +42,9 @@ defmodule Riverside do
 
       @behaviour Riverside.Behaviour
 
-      @auth_type Keyword.get(opts, :authentication, :default)
+      @auth_type          Keyword.get(opts, :authentication, :default)
       @connection_timeout Keyword.get(opts, :connection_timeout, 120_000)
-      @codec Application.get_env(:riverside, :codec, Riverside.Codec.Json)
+      @codec              Keyword.get(opts, :codec, Riverside.Codec.JSON)
 
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
@@ -113,7 +113,7 @@ defmodule Riverside do
 
         else
 
-          Logger.debug "#{state} unsupported frame type: #{frame_type}"
+          Logger.debug "#{session} unsupported frame type: #{frame_type}"
 
           {:error, :unsupported}
 
