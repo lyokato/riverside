@@ -9,6 +9,7 @@ defmodule Riverside do
       :: Authenticator.auth_result
 
     @callback __connection_timeout__() :: non_neg_integer
+    @callback __message_counter_opts__() :: keyword
 
     @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
                               message :: binary,
@@ -48,12 +49,17 @@ defmodule Riverside do
       @connection_timeout Keyword.get(config, :connection_timeout, 120_000)
       @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
 
+      @message_counter_opts Riverside.Config.message_counter_opts(config)
+
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
         leave_channel: 1
       ]
 
       import Riverside.Session, only: [trap_exit: 2]
+
+      @impl true
+      def __message_counter_opts__, do: @message_counter_opts
 
       @impl true
       def __connection_timeout__, do: @connection_timeout

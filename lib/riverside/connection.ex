@@ -179,11 +179,11 @@ defmodule Riverside.Connection do
 
   end
 
-  defp handle_frame(req, type, data, %{session: session}=state) do
+  defp handle_frame(req, type, data, %{handler: handler, session: session}=state) do
 
     Stats.countup_messages()
 
-    case Session.countup_messages(session) do
+    case Session.countup_messages(session, handler.__message_counter_opts__) do
 
       {:ok, session2} ->
         state2 = %{state| session: session2}
@@ -200,7 +200,7 @@ defmodule Riverside.Connection do
         end
 
       {:error, :too_many_messages} ->
-        Logger.warn "#{session} too many messages: #{session.peer_address(session)}"
+        Logger.warn "#{session} too many messages: #{Session.peer_address(session)}"
         {:shutdown, req, state}
 
     end

@@ -1,11 +1,5 @@
 defmodule Riverside.Session.MessageCounter do
 
-  @duration_key :session_message_counting_duration
-  @default_duration 2_000
-
-  @capacity_key :capacity_of_session_message_in_duration
-  @default_capacity 50
-
   @type t :: %__MODULE__{count:      non_neg_integer,
                          started_at: non_neg_integer}
 
@@ -17,14 +11,12 @@ defmodule Riverside.Session.MessageCounter do
                 started_at: Riverside.IO.Timestamp.milli_seconds()}
   end
 
-  @spec countup(t) :: {:ok, t} | {:error, :too_many_messages}
+  @spec countup(t, non_neg_integer, non_neg_integer) :: {:ok, t}
+    | {:error, :too_many_messages}
 
-  def countup(counter) do
+  def countup(counter, duration, capacity) do
 
     now = Riverside.IO.Timestamp.milli_seconds()
-
-    duration = Application.get_env(:riverside, @duration_key, @default_duration)
-    capacity = Application.get_env(:riverside, @capacity_key, @default_capacity)
 
     if counter.started_at + duration < now do
 

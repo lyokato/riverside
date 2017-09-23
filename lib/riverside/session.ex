@@ -43,30 +43,34 @@ defmodule Riverside.Session do
 
   @spec should_delegate_exit?(t, pid) :: boolean
 
-  def should_delegate_exit?(state, pid) do
-    MapSet.member?(state.trapping_pids.member, pid)
+  def should_delegate_exit?(session, pid) do
+    MapSet.member?(session.trapping_pids.member, pid)
   end
 
   @spec trap_exit(t, pid) :: t
 
-  def trap_exit(%{trapping_pids: pids}=state, pid) do
-    %{state |trapping_pids: MapSet.put(pids, pid)}
+  def trap_exit(%{trapping_pids: pids}=session, pid) do
+    %{session |trapping_pids: MapSet.put(pids, pid)}
   end
 
   @spec forget_to_trap_exit(t, pid) :: t
 
-  def forget_to_trap_exit(%{trapping_pids: pids}=state, pid) do
-    %{state |trapping_pids: MapSet.delete(pids, pid)}
+  def forget_to_trap_exit(%{trapping_pids: pids}=session, pid) do
+    %{session |trapping_pids: MapSet.delete(pids, pid)}
   end
 
-  @spec countup_messages(t) :: {:ok, t}
+  @spec countup_messages(t, keyword) :: {:ok, t}
     | {:error, :too_many_messages}
 
-  def countup_messages(%{message_counter: counter}=state) do
-    case MessageCounter.countup(counter) do
+  def countup_messages(%{message_counter: counter}=session, opts) do
+
+    duration = Keyword.fetch!(opts, :duration)
+    capacity = Keyword.fetch!(opts, :capacity)
+
+    case MessageCounter.countup(counter, duration, capacity) do
 
       {:ok, counter} ->
-        {:ok, %{state|message_counter: counter}}
+        {:ok, %{session|message_counter: counter}}
 
       {:error, :too_many_messages} ->
         {:error, :too_many_messages}
