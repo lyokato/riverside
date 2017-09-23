@@ -26,11 +26,12 @@ be found at [https://hexdocs.pm/riverside](https://hexdocs.pm/riverside).
 config :my_app, MyApp.Handler,
   authentication: {:basic, "example.org"},
   codec: Riverside.Codec.JSON,
-  connection_timeout: 120_000
+  connection_timeout: 120_000,
+  message_counter: [duration: 2_000, capacity: 50]
 ```
 
 ```elixir
-defmodule YourApp.Handler do
+defmodule MyApp.Handler do
 
   require Logger
 
@@ -39,7 +40,7 @@ defmodule YourApp.Handler do
   @impl true
   def authenticate({:basic, username, password}, params, headers, peer) do
 
-    case YourApp.Authenticator.authenticate(username, password) do
+    case MyApp.Authenticator.authenticate(username, password) do
       {:ok, user_id}             -> {:ok, user_id, %{}}
       {:error, :invalid_request} -> {:error, :invalid_request}
       _other                     -> {:error, :server_error}
