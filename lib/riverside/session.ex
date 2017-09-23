@@ -69,11 +69,10 @@ defmodule Riverside.Session do
 
     case MessageCounter.countup(counter, duration, capacity) do
 
-      {:ok, counter} ->
-        {:ok, %{session|message_counter: counter}}
+      {:ok, counter} -> {:ok, %{session|message_counter: counter}}
 
-      {:error, :too_many_messages} ->
-        {:error, :too_many_messages}
+      {:error, :too_many_messages} = error -> error
+
     end
   end
 
