@@ -10,7 +10,7 @@ defmodule Riverside.Session do
                          id:              String.t,
                          abbreviation:    String.t,
                          message_counter: MessageCounter.t,
-                         peer:            PeerInfo.t,
+                         peer:            PeerAddress.t,
                          trapping_pids:   MapSet.t}
 
   defstruct user_id:         0,

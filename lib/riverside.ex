@@ -18,7 +18,7 @@ defmodule Riverside do
       :: {:ok, Session.t}
        | {:error, :invalid_message | :unsupported }
 
-    @callback authenticate(cred_type :: Authenticator.cred_type, params :: map)
+    @callback authenticate(cred_type :: Authenticator.cred_type, params :: map, headers :: map)
       :: Authenticator.callback_result
 
     @callback init(session :: Session.t, state :: any)
@@ -67,37 +67,38 @@ defmodule Riverside do
       @impl true
       def __handle_authentication__(req) do
 
-        params = Riverside.Util.CowboyUtil.query_map(req)
+        params  = Riverside.Util.CowboyUtil.queries(req)
+        headers = Riverside.Util.CowboyUtil.headers(req)
 
-        __start_authentication__(@auth_type, params, req)
+        __start_authentication__(@auth_type, params, headers, req)
 
       end
 
-      defp __start_authentication__(:default, params, req) do
+      defp __start_authentication__(:default, params, headers, req) do
 
         Logger.debug "WebSocket - Default Authentication"
 
         Riverside.Authenticator.Default.authenticate(req, [],
-          &(authenticate(&1, params)))
+          &(authenticate(&1, params, headers)))
       end
 
-      defp __start_authentication__({:bearer_token, realm}, params, req) do
+      defp __start_authentication__({:bearer_token, realm}, params, headers, req) do
 
         Logger.debug "WebSocket - BearerToken Authentication"
 
         Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
-          &(authenticate(&1, params)))
+          &(authenticate(&1, params, headers)))
       end
 
-      defp __start_authentication__({:basic, realm}, params, req) do
+      defp __start_authentication__({:basic, realm}, params, headers, req) do
 
         Logger.debug "WebSocket - Basic Authentication"
 
         Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
-          &(authenticate(&1, params)))
+          &(authenticate(&1, params, headers)))
       end
 
-      defp __start_authentication__(cred, _params, req) do
+      defp __start_authentication__(cred, _params, _headers, req) do
 
         Logger.warn "Unsupported authentication credential: #{inspect cred}"
 
@@ -196,7 +197,7 @@ defmodule Riverside do
       def close(), do: send(self(), :stop)
 
       @impl true
-      def authenticate(_cred, _queries), do: {:error, :invalid_request}
+      def authenticate(_cred, _queries, _headers), do: {:error, :invalid_request}
 
       @impl true
       def init(session, state), do: {:ok, session, state}
@@ -211,7 +212,7 @@ defmodule Riverside do
       def terminate(_session, _state), do: :ok
 
       defoverridable [
-        authenticate: 2,
+        authenticate: 3,
         init: 2,
         handle_info: 3,
         handle_message: 3,

@@ -1,10 +1,17 @@
 defmodule Riverside.Util.CowboyUtil do
 
-  @spec query_map(:cowboy_req.req) :: map
+  @spec queries(:cowboy_req.req) :: map
 
-  def query_map(req) do
+  def queries(req) do
     {queries, _} = :cowboy_req.qs_vals(req)
     queries |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
+  end
+
+  @spec headers(:cowboy_req.req) :: map
+
+  def headers(req) do
+    {headers, _} = :cowboy_req.headers(req)
+    headers |> Map.new(&{String.to_atom(elem(&1,0)), elem(&1,1)})
   end
 
   @spec auth_error_response(:cowboy_req.req, non_neg_integer, String.t, String.t) :: :cowboy_req.req

@@ -1,4 +1,4 @@
-defmodule Riverside.PeerInfo do
+defmodule Riverside.PeerAddress do
 
   alias Riverside.Util.CowboyUtil
 
@@ -22,11 +22,11 @@ defmodule Riverside.PeerInfo do
 
 end
 
-defimpl String.Chars, for: Riverside.PeerInfo do
+defimpl String.Chars, for: Riverside.PeerAddress do
 
-  alias Riverside.PeerInfo
+  alias Riverside.PeerAddress
 
-  def to_string(%PeerInfo{address: address, port: port, x_forwarded_for: x_forwarded_for}) do
+  def to_string(%PeerAddress{address: address, port: port, x_forwarded_for: x_forwarded_for}) do
     Poison.encode!(%{
       ip: "#{:inet_parse.ntoa(address)}",
       port: port,

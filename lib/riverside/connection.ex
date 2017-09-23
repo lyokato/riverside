@@ -5,7 +5,7 @@ defmodule Riverside.Connection do
   require Logger
 
   alias Riverside.LocalDelivery
-  alias Riverside.PeerInfo
+  alias Riverside.PeerAddress
   alias Riverside.Session
   alias Riverside.Stats
 
@@ -25,7 +25,7 @@ defmodule Riverside.Connection do
 
   def init(_, req, opts) do
 
-    peer = PeerInfo.gather(req)
+    peer = PeerAddress.gather(req)
 
     Logger.info "WebSocket - incoming new request: #{peer}"
 
