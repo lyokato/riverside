@@ -11,9 +11,9 @@ defmodule Riverside.Authenticator.BearerToken do
     realm = Keyword.get(opts, :realm, "")
 
     with {:ok, token}          <- CowboyUtil.bearer_auth_credential(req),
-         {:ok, user_id, stash} <- f.({:bearer_token, token}) do
+         {:ok, user_id, state} <- f.({:bearer_token, token}) do
 
-      {:ok, user_id, stash}
+      {:ok, user_id, state}
 
     else
       {:error, :invalid_token} ->
@@ -27,6 +27,10 @@ defmodule Riverside.Authenticator.BearerToken do
       {:error, :not_found} ->
         req2 = put_authenticate_header(req, 401, realm)
         {:error, :unauthorized, req2}
+
+      {:error, :server_error} ->
+        req2 = CowboyUtil.response_with_code(req, 500)
+        {:error, :server_error, req2}
     end
 
   end

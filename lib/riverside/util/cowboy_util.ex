@@ -14,6 +14,13 @@ defmodule Riverside.Util.CowboyUtil do
     req2
   end
 
+  @spec response_with_code(:cowboy_req.req, non_neg_integer) :: :cowboy_req.req
+
+  def response_with_code(req, code) do
+    {:ok, req2} = :cowboy_req.reply(code, [], req)
+    req2
+  end
+
   @spec basic_auth_credential(:cowboy_req.req)
     :: {:ok, String.t, String.t}
      | {:error, :not_found}

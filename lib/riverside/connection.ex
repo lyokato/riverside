@@ -37,12 +37,8 @@ defmodule Riverside.Connection do
         state = new(handler, user_id, peer, handler_state)
         {:upgrade, :protocol, :cowboy_websocket, req, state}
 
-      {:error, :bad_request, req2} ->
-        Logger.info "WebSocket - failed to authenticate, shutdown"
-        {:shutdown, req2, nil}
-
-      {:error, :unauthorized, req2} ->
-        Logger.info "WebSocket - failed to authenticate, shutdown"
+      {:error, reason, req2} ->
+        Logger.info "WebSocket - failed to authenticate by reason: #{reason}, shutdown"
         {:shutdown, req2, nil}
 
     end

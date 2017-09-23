@@ -11,9 +11,9 @@ defmodule Riverside.Authenticator.Basic do
     realm = Keyword.get(opts, :realm, "")
 
     with {:ok, username, password} <- CowboyUtil.basic_auth_credential(req),
-         {:ok, user_id, stash}     <- f.({:basic, username, password}) do
+         {:ok, user_id, state}     <- f.({:basic, username, password}) do
 
-      {:ok, user_id, stash}
+      {:ok, user_id, state}
 
     else
 
@@ -28,6 +28,10 @@ defmodule Riverside.Authenticator.Basic do
       {:error, :not_found} ->
         req2 = put_authenticate_header(req, 401, realm)
         {:error, :unauthorized, req2}
+
+      {:error, :server_error} ->
+        req2 = CowboyUtil.response_with_code(req, 500)
+        {:error, :server_error, req2}
 
     end
 

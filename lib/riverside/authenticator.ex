@@ -9,11 +9,12 @@ defmodule Riverside.Authenticator do
                    | {:basic, String.t, String.t}
 
   @type callback_result :: {:ok, non_neg_integer, any}
-    | {:error, :invalid_request | :invalid_token}
+    | {:error, :invalid_request | :invalid_token | :server_error }
 
   @type auth_result :: {:ok, non_neg_integer, any}
     | {:error, :unauzhorized, :cowboy_req.req}
     | {:error, :bad_request, :cowboy_req.req}
+    | {:error, :server_error, :cowboy_req.req}
 
   @type callback_func :: (cred_type -> callback_result)
 

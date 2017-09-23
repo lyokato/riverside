@@ -15,8 +15,7 @@ defmodule Riverside do
                               session :: Session.t,
                               state :: any)
       :: {:ok, Session.t}
-       | {:error, :invalid_message}
-       | {:error, :unsupported}
+       | {:error, :invalid_message | :unsupported }
 
     @callback authenticate(cred_type :: Authenticator.cred_type, params :: map)
       :: Authenticator.callback_result
