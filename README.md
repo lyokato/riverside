@@ -70,11 +70,38 @@ defmodule YourApp.Handler do
 end
 ```
 
-your application starter.
+And you have to append Riverside processes into your application's supervisor tree.
 
 ```elixir
+defmodule MyApp
 
-riverside_children = Riverside.Spec.child_spec(YourApp.Handler, port: 3000, path: "/"])
+  use Application
+
+  dof init do
+  end
+
+  def start(_type, _args) do
+
+    import Supervisor.Spec, warn: false
+
+    opts = [strategy: one_for_one,
+            name:     MyApp.Supervisor]
+
+    children = [
+        # other children...
+     ]
+
+    rs_children = Riverside.Spec.children(MyApp.Handler,
+      port: 3000,
+      path: "/"])
+
+    all_children = children ++ rs_children
+
+    Supervisor.start_link(all_children, opts)
+
+  end
+
+end
 
 ```
 
@@ -89,6 +116,38 @@ Implement following callback functions which **Riverside** requires.
 - handle_message/3
 - handle_info/3
 - terminate/2
+
+### Spec Configuration
+
+```elixir
+Riverside.Spec.children(MyApp.Handler, opts)
+```
+
+First argument is the Handler module you prepared beforehand.
+
+Second is keyword list
+
+#### port
+
+Port number of the WebSocket endpoint.
+
+#### path
+
+URL path for the WebSocket endpoint. "/" is set by default.
+
+For instance, if you set "/foo", your clinet should access to the endpoint URL like following
+
+```
+ws://example.org/foo
+```
+
+#### reuse_port
+
+Boolean flag for TCP's SO_REUSEPORT.
+
+#### router
+
+Plug routing module. Riverside.Router is set by default.
 
 ## Author
 
