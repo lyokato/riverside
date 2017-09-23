@@ -27,7 +27,9 @@ config :my_app, MyApp.Handler,
   authentication: {:basic, "example.org"},
   codec: Riverside.Codec.JSON,
   connection_timeout: 120_000
+```
 
+```elixir
 defmodule YourApp.Handler do
 
   require Logger
