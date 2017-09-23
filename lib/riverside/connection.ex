@@ -98,9 +98,9 @@ defmodule Riverside.Connection do
 
     Logger.debug "#{session} @exit: #{inspect pid} -> #{inspect self()}"
 
-    if session.should_delegate_exit?(session, pid) do
+    if Session.should_delegate_exit?(session, pid) do
 
-      session2 = session.forget_to_trap_exit(session, pid)
+      session2 = Session.forget_to_trap_exit(session, pid)
       state2   = %{state| session: session2}
       handler_handle_info({:EXIT, pid, reason}, req, state2)
 

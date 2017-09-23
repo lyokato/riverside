@@ -11,17 +11,10 @@ defmodule Example.Handler do
     {:ok, String.to_integer(username), %{}}
 
   end
-  def authenticate(cred, _queries) do
-
-    Logger.debug "Session: unsupported authentication #{cred}"
-
-    {:error, :invalid_request}
-
-  end
 
   def init(session, state) do
 
-    Logger.debug "#{session}: init"
+    Logger.debug "#{session} Handler: init"
 
     {:ok, session, state}
 
@@ -29,7 +22,7 @@ defmodule Example.Handler do
 
   def handle_message(msg, session, state) do
 
-    Logger.debug "#{session} message: #{inspect msg}"
+    Logger.debug "#{session} Handler: message: #{inspect msg}"
 
     Logger.debug "just echo"
 
@@ -39,7 +32,9 @@ defmodule Example.Handler do
 
   end
 
-  def terminate(_session, _state) do
+  def terminate(session, _state) do
+
+    Logger.debug "#{session} Handler: terminate"
     :ok
   end
 

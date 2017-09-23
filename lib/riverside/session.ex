@@ -44,7 +44,7 @@ defmodule Riverside.Session do
   @spec should_delegate_exit?(t, pid) :: boolean
 
   def should_delegate_exit?(session, pid) do
-    MapSet.member?(session.trapping_pids.member, pid)
+    MapSet.member?(session.trapping_pids, pid)
   end
 
   @spec trap_exit(t, pid) :: t
