@@ -1,6 +1,6 @@
 defmodule Riverside.Spec do
 
-  @doc ~S"""
+  @moduledoc ~S"""
   This module provides a function to create a spec list
   for your Supervisor
   """
