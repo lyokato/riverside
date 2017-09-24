@@ -1,6 +1,7 @@
 defmodule Riverside.LocalDelivery do
 
   alias Riverside.Codec
+  alias Riverside.Session
 
   defmodule Topic do
 
@@ -18,8 +19,8 @@ defmodule Riverside.LocalDelivery do
 
   end
 
-  @type destination :: {:user, non_neg_integer}
-                     | {:session, non_neg_integer, String.t}
+  @type destination :: {:user, Session.user_id}
+                     | {:session, Session.user_id, String.t}
                      | {:channel, term}
 
   @spec deliver(destination, {Codec.frame_type, any}) :: no_return

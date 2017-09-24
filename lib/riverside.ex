@@ -166,15 +166,15 @@ defmodule Riverside do
         end
       end
 
-      @spec deliver_user(user_id :: non_neg_integer,
+      @spec deliver_user(user_id :: Riverside.Session.user_id,
                          data    :: any) :: :ok | :error
 
       def deliver_user(user_id, data) do
         deliver({:user, user_id}, data)
       end
 
-      @spec deliver_session(user_id    :: non_neg_integer,
-                            session_id :: non_neg_integer,
+      @spec deliver_session(user_id    :: Riverside.Session.user_id,
+                            session_id :: String.t,
                             data       :: any) :: :ok | :error
       def deliver_session(user_id, session_id, data) do
         deliver({:session, user_id, session_id}, data)

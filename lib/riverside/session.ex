@@ -6,7 +6,9 @@ defmodule Riverside.Session do
   alias Riverside.IO.Random
   alias Riverside.Session.TransmissionLimitter
 
-  @type t :: %__MODULE__{user_id: non_neg_integer,
+  @type user_id :: non_neg_integer | String.t
+
+  @type t :: %__MODULE__{user_id: user_id,
                          id: String.t,
                          abbreviation: String.t,
                          transmission_limitter: TransmissionLimitter.t,
@@ -20,6 +22,7 @@ defmodule Riverside.Session do
             peer: nil,
             trapping_pids: nil
 
+  @spec new(user_id, Riverside.PeerAddress.t) :: t
   def new(user_id, peer) do
 
     session_id = create_session_id()
@@ -42,26 +45,22 @@ defmodule Riverside.Session do
   end
 
   @spec should_delegate_exit?(t, pid) :: boolean
-
   def should_delegate_exit?(session, pid) do
     MapSet.member?(session.trapping_pids, pid)
   end
 
   @spec trap_exit(t, pid) :: t
-
   def trap_exit(%{trapping_pids: pids}=session, pid) do
     %{session |trapping_pids: MapSet.put(pids, pid)}
   end
 
   @spec forget_to_trap_exit(t, pid) :: t
-
   def forget_to_trap_exit(%{trapping_pids: pids}=session, pid) do
     %{session |trapping_pids: MapSet.delete(pids, pid)}
   end
 
   @spec countup_messages(t, keyword) :: {:ok, t}
     | {:error, :too_many_messages}
-
   def countup_messages(%{transmission_limitter: limitter}=session, opts) do
 
     duration = Keyword.fetch!(opts, :duration)

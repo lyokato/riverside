@@ -8,10 +8,10 @@ defmodule Riverside.Authenticator do
                    | {:bearer_token, String.t}
                    | {:basic, String.t, String.t}
 
-  @type callback_result :: {:ok, non_neg_integer, any}
+  @type callback_result :: {:ok, Riverside.Session.user_id, any}
     | {:error, :invalid_request | :invalid_token | :server_error }
 
-  @type auth_result :: {:ok, non_neg_integer, any}
+  @type auth_result :: {:ok, Riverside.Session.user_id, any}
     | {:error, :unauzhorized, :cowboy_req.req}
     | {:error, :bad_request, :cowboy_req.req}
     | {:error, :server_error, :cowboy_req.req}
