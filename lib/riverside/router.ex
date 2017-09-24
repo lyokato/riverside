@@ -1,5 +1,9 @@
 defmodule Riverside.Router do
 
+  @moduledoc """
+  Default Router module
+  """
+
   use Plug.Router
 
   plug Plug.Static, at: "/",

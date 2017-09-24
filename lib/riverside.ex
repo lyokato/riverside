@@ -1,5 +1,9 @@
 defmodule Riverside do
 
+  @moduledoc ~S"""
+  Handler specification for your WebSocket service.
+  """
+
   alias Riverside.Authenticator
   alias Riverside.PeerAddress
   alias Riverside.Session

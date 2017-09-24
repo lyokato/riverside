@@ -21,8 +21,7 @@ defmodule Riverside.Mixfile do
       :ebus,
       :poison,
       :msgpax
-      ],
-     mod: {Example.Bootstrap, []}]
+      ]]
   end
 
   defp deps do
