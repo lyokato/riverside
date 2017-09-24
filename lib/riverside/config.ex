@@ -6,9 +6,9 @@ defmodule Riverside.Config do
     config
   end
 
-  def message_counter_opts(config) do
-    if Keyword.has_key?(config, :message_counter) do
-      mc = Keyword.get(config, :message_counter, [])
+  def transmission_limit(config) do
+    if Keyword.has_key?(config, :transmission_limit) do
+      mc = Keyword.get(config, :transmission_limit, [])
       duration = Keyword.get(mc, :duration, 2_000)
       capacity = Keyword.get(mc, :capacity, 50)
       [duration: duration, capacity: capacity]

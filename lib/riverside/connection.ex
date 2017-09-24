@@ -185,7 +185,7 @@ defmodule Riverside.Connection do
 
     Stats.countup_messages()
 
-    case Session.countup_messages(session, handler.__message_counter_opts__) do
+    case Session.countup_messages(session, handler.__transmission_limit__) do
 
       {:ok, session2} ->
         state2 = %{state| session: session2}

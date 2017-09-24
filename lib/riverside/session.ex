@@ -4,33 +4,33 @@ defmodule Riverside.Session do
   @session_id_length 20
 
   alias Riverside.IO.Random
-  alias Riverside.Session.MessageCounter
+  alias Riverside.Session.TransmissionLimitter
 
-  @type t :: %__MODULE__{user_id:         non_neg_integer,
-                         id:              String.t,
-                         abbreviation:    String.t,
-                         message_counter: MessageCounter.t,
-                         peer:            PeerAddress.t,
-                         trapping_pids:   MapSet.t}
+  @type t :: %__MODULE__{user_id: non_neg_integer,
+                         id: String.t,
+                         abbreviation: String.t,
+                         transmission_limitter: TransmissionLimitter.t,
+                         peer: PeerAddress.t,
+                         trapping_pids: MapSet.t}
 
-  defstruct user_id:         0,
-            id:              "",
-            abbreviation:    "",
-            message_counter: nil,
-            peer:            nil,
-            trapping_pids:   nil
+  defstruct user_id: 0,
+            id: "",
+            abbreviation: "",
+            transmission_limitter: nil,
+            peer: nil,
+            trapping_pids: nil
 
   def new(user_id, peer) do
 
     session_id = create_session_id()
     abbreviation = create_abbreviation(user_id, session_id)
 
-    %__MODULE__{user_id:         user_id,
-                id:              session_id,
-                abbreviation:    abbreviation,
-                message_counter: MessageCounter.new(),
-                trapping_pids:   MapSet.new(),
-                peer:            peer}
+    %__MODULE__{user_id: user_id,
+                id: session_id,
+                abbreviation: abbreviation,
+                transmission_limitter: TransmissionLimitter.new(),
+                trapping_pids: MapSet.new(),
+                peer: peer}
   end
 
   defp create_session_id() do
@@ -62,14 +62,14 @@ defmodule Riverside.Session do
   @spec countup_messages(t, keyword) :: {:ok, t}
     | {:error, :too_many_messages}
 
-  def countup_messages(%{message_counter: counter}=session, opts) do
+  def countup_messages(%{transmission_limitter: limitter}=session, opts) do
 
     duration = Keyword.fetch!(opts, :duration)
     capacity = Keyword.fetch!(opts, :capacity)
 
-    case MessageCounter.countup(counter, duration, capacity) do
+    case TransmissionLimitter.countup(limitter, duration, capacity) do
 
-      {:ok, counter} -> {:ok, %{session|message_counter: counter}}
+      {:ok, limitter} -> {:ok, %{session|transmission_limitter: limitter}}
 
       {:error, :too_many_messages} = error -> error
 

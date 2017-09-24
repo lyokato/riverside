@@ -16,7 +16,7 @@ defmodule Riverside do
 
     @callback __connection_timeout__() :: non_neg_integer
 
-    @callback __message_counter_opts__() :: keyword
+    @callback __transmission_limit__() :: keyword
 
     @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
                               message    :: binary,
@@ -64,7 +64,7 @@ defmodule Riverside do
       @connection_timeout Keyword.get(config, :connection_timeout, 120_000)
       @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
 
-      @message_counter_opts Riverside.Config.message_counter_opts(config)
+      @transmission_limit Riverside.Config.transmission_limit(config)
 
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
@@ -74,7 +74,7 @@ defmodule Riverside do
       import Riverside.Session, only: [trap_exit: 2]
 
       @impl true
-      def __message_counter_opts__, do: @message_counter_opts
+      def __transmission_limit__, do: @transmission_limit
 
       @impl true
       def __connection_timeout__, do: @connection_timeout

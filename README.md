@@ -20,7 +20,7 @@ config :my_app, MyApp.Handler,
   authentication: {:basic, "example.org"},
   codec: Riverside.Codec.JSON,
   connection_timeout: 120_000,
-  message_counter: [duration: 2_000, capacity: 50]
+  transmission_limit: [duration: 2_000, capacity: 50]
 ```
 
 ```elixir

@@ -1,4 +1,4 @@
-defmodule Riverside.Session.MessageCounter do
+defmodule Riverside.Session.TransmissionLimitter do
 
   @type t :: %__MODULE__{count:      non_neg_integer,
                          started_at: non_neg_integer}
@@ -14,21 +14,21 @@ defmodule Riverside.Session.MessageCounter do
   @spec countup(t, non_neg_integer, non_neg_integer) :: {:ok, t}
     | {:error, :too_many_messages}
 
-  def countup(counter, duration, capacity) do
+  def countup(limitter, duration, capacity) do
 
     now = Riverside.IO.Timestamp.milli_seconds()
 
-    if counter.started_at + duration < now do
+    if limitter.started_at + duration < now do
 
-      {:ok,  %{counter| count: 1, started_at: now}}
+      {:ok,  %{limitter| count: 1, started_at: now}}
 
     else
 
-      count = counter.count + 1
+      count = limitter.count + 1
 
       if count < capacity do
 
-        {:ok, %{counter| count: count}}
+        {:ok, %{limitter| count: count}}
 
       else
 
