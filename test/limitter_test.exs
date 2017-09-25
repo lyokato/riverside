@@ -1,4 +1,4 @@
-defmodule LimitterTest do
+defmodule Riverside.LimitterTest do
   use ExUnit.Case
 
   alias Riverside.Session.TransmissionLimitter
