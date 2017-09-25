@@ -6,6 +6,15 @@ defmodule Riverside.IO.Timestamp.Sandbox do
 
   use GenServer
 
+  @type mode :: :fixture | :real
+
+  defstruct stack: [],
+            mode: :fixture
+
+  def set_mode(mode) do
+    GenServer.call(__MODULE__, {:set_mode, mode})
+  end
+
   def seconds() do
     {:ok, seconds} = GenServer.call(__MODULE__, :get_seconds)
     Logger.debug "[Sandbox] Timestamp.seconds/0 returns: #{seconds}"
@@ -39,15 +48,22 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   end
 
   def init(opts) when is_list(opts) do
-    {:ok, %{stack: opts}}
-  end
-  def init(_args) do
-    {:ok, %{stack: []}}
+    {:ok, %__MODULE__{stack: opts, mode: :fixture}}
   end
 
+  def handle_call({:set_mode, mode}, _from, state) do
+    {:reply, :ok, %{state| mode: mode}}
+  end
+
+  def handle_call(:get_seconds, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.seconds(), state}}
+  end
   def handle_call(:get_seconds, _from, %{stack: stack}=state) do
     {ms, stack2} = shift_stack(stack)
     {:reply, {:ok, div(ms, 1_000)}, %{state| stack: stack2}}
+  end
+  def handle_call(:get_milli_seconds, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.milli_seconds(), state}}
   end
   def handle_call(:get_milli_seconds, _from, %{stack: stack}=state) do
     {ms, stack2} = shift_stack(stack)

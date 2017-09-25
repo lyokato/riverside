@@ -7,6 +7,13 @@ defmodule Riverside.IO.Random.Sandbox do
 
   use GenServer
 
+  @type mode :: :fixture | :real
+
+  defstruct uuid:   [],
+            hex:    [],
+            bigint: [],
+            mode: :fixture
+
   def hex(len) do
     {:ok, hex} = GenServer.call(__MODULE__, {:hex, len})
     Logger.debug "[Sandbox] Random.hex/1 returns: #{hex}"
@@ -72,7 +79,11 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def init(_args) do
-    {:ok, %{hex: [], bigint: [], uuid: []}}
+    {:ok, %{hex: [], bigint: [], uuid: [], mode: :fixture}}
+  end
+
+  def handle_call({:set_mode, mode}, _from, state) do
+    {:reply, :ok, %{state| mode: mode}}
   end
 
   def handle_call({:set_hex_list, list}, _from, state) do
@@ -87,16 +98,25 @@ defmodule Riverside.IO.Random.Sandbox do
     {:reply, :ok, %{state| uuid: list}}
   end
 
+  def handle_call({:hex, _len}, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.hex()}, state}
+  end
   def handle_call({:hex, _len}, _from, %{hex: stack}=state) do
     {hex, stack2} = shift_stack(stack)
     {:reply, {:ok, hex}, %{state| hex: stack2}}
   end
 
+  def handle_call(:bigint, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.bigint()}, state}
+  end
   def handle_call(:bigint, _from, %{bigint: stack}=state) do
     {bigint, stack2} = shift_stack(stack)
     {:reply, {:ok, bigint}, %{state| bigint: stack2}}
   end
 
+  def handle_call(:uuid, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.uuid()}, state}
+  end
   def handle_call(:uuid, _from, %{uuid: stack}=state) do
     {uuid, stack2} = shift_stack(stack)
     {:reply, {:ok, uuid}, %{state| uuid: stack2}}
