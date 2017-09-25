@@ -5,13 +5,14 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   require Logger
 
   use GenServer
+  alias Riverside.IO.Timestamp.Real
 
   @type mode :: :fixture | :real
 
   defstruct stack: [],
             mode: :fixture
 
-  def set_mode(mode) do
+  def mode(mode) do
     GenServer.call(__MODULE__, {:set_mode, mode})
   end
 
@@ -56,14 +57,14 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   end
 
   def handle_call(:get_seconds, _from, %{mode: :real}=state) do
-    {:reply, {:ok, Real.seconds(), state}}
+    {:reply, {:ok, Real.seconds()}, state}
   end
   def handle_call(:get_seconds, _from, %{stack: stack}=state) do
     {ms, stack2} = shift_stack(stack)
     {:reply, {:ok, div(ms, 1_000)}, %{state| stack: stack2}}
   end
   def handle_call(:get_milli_seconds, _from, %{mode: :real}=state) do
-    {:reply, {:ok, Real.milli_seconds(), state}}
+    {:reply, {:ok, Real.milli_seconds()}, state}
   end
   def handle_call(:get_milli_seconds, _from, %{stack: stack}=state) do
     {ms, stack2} = shift_stack(stack)

@@ -14,6 +14,10 @@ defmodule Riverside.IO.Random.Sandbox do
             bigint: [],
             mode: :fixture
 
+  def mode(mode) do
+    GenServer.call(__MODULE__, {:set_mode, mode})
+  end
+
   def hex(len) do
     {:ok, hex} = GenServer.call(__MODULE__, {:hex, len})
     Logger.debug "[Sandbox] Random.hex/1 returns: #{hex}"
@@ -74,8 +78,8 @@ defmodule Riverside.IO.Random.Sandbox do
     set_uuid([uuid])
   end
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link() do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def init(_args) do
@@ -98,8 +102,8 @@ defmodule Riverside.IO.Random.Sandbox do
     {:reply, :ok, %{state| uuid: list}}
   end
 
-  def handle_call({:hex, _len}, _from, %{mode: :real}=state) do
-    {:reply, {:ok, Real.hex()}, state}
+  def handle_call({:hex, len}, _from, %{mode: :real}=state) do
+    {:reply, {:ok, Real.hex(len)}, state}
   end
   def handle_call({:hex, _len}, _from, %{hex: stack}=state) do
     {hex, stack2} = shift_stack(stack)

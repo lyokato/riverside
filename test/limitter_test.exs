@@ -1,10 +1,13 @@
-defmodule LimitterTest do
+defmodule Riverside.LimitterTest do
   use ExUnit.Case
 
   alias Riverside.Session.TransmissionLimitter
 
   setup do
     Riverside.IO.Timestamp.Sandbox.start_link
+
+    Riverside.IO.Random.Sandbox.start_link
+    Riverside.IO.Random.Sandbox.mode(:real)
     :ok
   end
 
