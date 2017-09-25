@@ -6,11 +6,15 @@ defmodule Riverside.ClientTest do
   alias Riverside.Test.TestClient
 
   setup do
+
+    Riverside.IO.Timestamp.Sandbox.start_link
+
     {:ok, pid} = TestServer.start(TestHandler, 3000, "/")
 
     ExUnit.Callbacks.on_exit(fn ->
       Riverside.Test.TestServer.stop(pid)
     end)
+
     :ok
   end
 
