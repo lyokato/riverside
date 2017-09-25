@@ -7,6 +7,8 @@ config :riverside, Example.Handler,
     timestamp_module: Riverside.IO.Timestmap.Sandbox,
     random_module: Riverside.IO.Random.Sandbox
 
+config :dummy, TestHandler,
+  connection_timeout: 60_000
 
 config :logger,
   level: :debug,

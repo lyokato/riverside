@@ -1,6 +1,7 @@
-defmodule Riverside.TestClient do
+defmodule Riverside.Test.TestClient do
 
   require Logger
+
   use GenServer
 
   defstruct sock: nil,
@@ -10,12 +11,19 @@ defmodule Riverside.TestClient do
     GenServer.call(pid, :stop)
   end
 
-  def send(pid, msg) do
+  def send_message(pid, msg) do
     GenServer.cast(pid, {:send, msg})
   end
 
+  def test_message(%{sender: pid, message: message, receivers: receivers}, timeout \\ 1_000) do
+    receivers |> Enum.each(fn %{receiver: receiver, tests: tests} ->
+      wait_to_test(receiver, tests, timeout)
+    end)
+    send_message(pid, message)
+  end
+
   def wait_to_test(pid, functions, timeout) do
-    GenServer.call(pid, {:wait_messages, functions, timeout})
+    GenServer.call(pid, {:wait_to_receive, functions, timeout}, timeout + 1_000)
   end
 
   def start_link(opts) do
@@ -23,10 +31,10 @@ defmodule Riverside.TestClient do
   end
 
   def new(sock, codec) do
-    %__MODULE__{sock: sock, codec: codec}
+    %__MODULE__{sock:  sock, codec: codec}
   end
 
-  defp connect(host, port, path, headers \\ []) do
+  defp connect(host, port, path, headers) do
     Socket.Web.connect(host, port, path: path, headers: headers)
   end
 
@@ -44,7 +52,7 @@ defmodule Riverside.TestClient do
         start_receiver(sock)
         {:ok, new(sock, codec)}
 
-      {:error, reason} ->
+      {:error, _reason} ->
         {:stop, :disconnected}
 
     end
@@ -114,23 +122,28 @@ defmodule Riverside.TestClient do
     wait_to_receive(timer, tests, state)
   end
 
-  def handle_info({:data, type, data}, state) do
-    case decode_message(state.codec, type, data) do
-      {:ok, value}     -> {:noreply, state}
-      {:error, reason} -> {:noreply, state}
-    end
-  end
-
   def handle_call(:stop, _from, state) do
     Socket.Web.close(state.sock)
     {:stop, :normal, :ok, state}
+  end
+
+  def handle_info({:data, type, data}, state) do
+    case decode_message(state.codec, type, data) do
+
+      {:ok, value} ->
+        send(self(), {:receive, value})
+        {:noreply, state}
+
+      {:error, _reason} ->
+        {:noreply, state}
+    end
   end
 
   def handle_cast({:send, packet}, %{codec: codec}=state) do
     case codec.encode(packet) do
 
       {:ok, value} ->
-        Socket.Web.send!(state.sock, {codec.frame_type, packet})
+        Socket.Web.send!(state.sock, {codec.frame_type, value})
         {:noreply, state}
 
       {:error, reason} ->
