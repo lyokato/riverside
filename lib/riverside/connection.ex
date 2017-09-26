@@ -44,6 +44,10 @@ defmodule Riverside.Connection do
     end
   end
 
+  def terminate(reason, _req, _state) do
+    :ok
+  end
+
   def websocket_init(_type, req, state) do
 
     Logger.info "#{state.session} @init"
@@ -178,7 +182,6 @@ defmodule Riverside.Connection do
     Stats.countdown_connections()
 
     :ok
-
   end
 
   defp handle_frame(req, type, data, %{handler: handler, session: session}=state) do
