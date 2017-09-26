@@ -212,7 +212,9 @@ defmodule Riverside do
       def close(), do: send(self(), :stop)
 
       @impl true
-      def authenticate(_cred, _queries, _headers, _peer), do: {:error, :invalid_request}
+      def authenticate(_cred, _queries, _headers, _peer) do
+        {:ok, Riverside.IO.Random.bigint(), %{}}
+      end
 
       @impl true
       def init(session, state), do: {:ok, session, state}

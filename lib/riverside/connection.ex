@@ -44,7 +44,7 @@ defmodule Riverside.Connection do
     end
   end
 
-  def terminate(reason, _req, _state) do
+  def terminate(_reason, _req, _state) do
     :ok
   end
 

@@ -47,7 +47,7 @@ defmodule TestAuthBasicHandler do
   use Riverside, otp_app: :riverside
 
   def authenticate({:basic, username, password}, _params, _header, _peer) do
-    if password == "foobar" do
+    if username == "valid_example" and password == "foobar" do
       {:ok, username, %{}}
     else
       {:error, :invalid_request}
@@ -70,7 +70,7 @@ defmodule TestAuthBearerTokenHandler do
     if token == "foobar" do
       {:ok, 1, %{}}
     else
-      {:error, :invalid_request}
+      {:error, :invalid_token}
     end
   end
 
