@@ -1,4 +1,4 @@
-defmodule Riverside.ClientTest do
+defmodule Riverside.EchoTest do
 
   use ExUnit.Case
 
@@ -13,7 +13,7 @@ defmodule Riverside.ClientTest do
     Riverside.IO.Random.Sandbox.start_link
     Riverside.IO.Random.Sandbox.mode(:real)
 
-    {:ok, pid} = TestServer.start(TestHandler, 3000, "/")
+    {:ok, pid} = TestServer.start(TestEchoHandler, 3000, "/")
 
     ExUnit.Callbacks.on_exit(fn ->
       Riverside.Test.TestServer.stop(pid)
@@ -22,23 +22,20 @@ defmodule Riverside.ClientTest do
     :ok
   end
 
-  test "client" do
-    {:ok, client1} = connect_client()
-    {:ok, client2} = connect_client()
+  test "echo" do
+    {:ok, client} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
 
     TestClient.test_message(%{
-      sender: client1,
-      message: %{"to" => "foo"},
-      receivers: []
+      sender: client,
+      message: %{"content" => "Hello"},
+      receivers: [%{receiver: client, tests: [
+        fn msg ->
+          assert Map.has_key?(msg, "content")
+          assert msg["content"] == "Hello"
+        end
+      ]}]
     })
 
-    TestClient.stop(client1)
-    TestClient.stop(client2)
-  end
-
-
-  defp connect_client() do
-    TestClient.start_link(host: "localhost", port: 3000, path: "/")
   end
 
 end

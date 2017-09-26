@@ -4,7 +4,7 @@ defmodule Riverside.Authenticator.Default do
   alias Riverside.Util.CowboyUtil
 
   def authenticate(req, _opts, f) do
-    with {:ok, user_id, state} <- f.({:default}) do
+    with {:ok, user_id, state} <- f.(:default) do
       {:ok, user_id, state}
     else
       {:error, :server_error} ->

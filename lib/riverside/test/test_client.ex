@@ -34,7 +34,7 @@ defmodule Riverside.Test.TestClient do
     %__MODULE__{sock:  sock, codec: codec}
   end
 
-  defp connect(host, port, path, headers) do
+  def connect(host, port, path, headers) do
     Socket.Web.connect(host, port, path: path, headers: headers)
   end
 
@@ -53,7 +53,7 @@ defmodule Riverside.Test.TestClient do
         {:ok, new(sock, codec)}
 
       {:error, _reason} ->
-        {:stop, :disconnected}
+        {:stop, :normal}
 
     end
 
