@@ -26,7 +26,11 @@ config :riverside, TestAuthBearerTokenHandler,
   authentication: {:bearer_token, "exmaple.org"},
   connection_timeout: 60_000
 
+config :riverside, TestDirectRelayHandler,
+  authentication: {:bearer_token, "exmaple.org"},
+  connection_timeout: 60_000
+
 config :logger,
-  level: :debug,
+  level: :info,
   truncate: 4096
 

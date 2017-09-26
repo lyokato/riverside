@@ -1,4 +1,29 @@
-defmodule Riverside.AuthQueryTest do
+defmodule TestAuthQueryHandler do
+
+  require Logger
+  use Riverside, otp_app: :riverside
+
+  def authenticate(:default, params, _header, _peer) do
+    if Map.has_key?(params, :user) do
+      username = Map.fetch!(params, :user)
+      if username == "valid_example" do
+        {:ok, username, %{}}
+      else
+        {:error, :invalid_request}
+      end
+    else
+      {:error, :invalid_request}
+    end
+  end
+
+  def handle_message(msg, session, state) do
+    deliver_me(msg)
+    {:ok, session, state}
+  end
+
+end
+
+defmodule Riverside.Auth.QueryTest do
 
   use ExUnit.Case
 

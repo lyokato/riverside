@@ -1,3 +1,19 @@
+defmodule TestEchoHandler do
+
+  require Logger
+  use Riverside, otp_app: :riverside
+
+  def authenticate(_cred, _params, _header, _peer) do
+    {:ok, 1, %{}}
+  end
+
+  def handle_message(msg, session, state) do
+    deliver_me(msg)
+    {:ok, session, state}
+  end
+
+end
+
 defmodule Riverside.EchoTest do
 
   use ExUnit.Case

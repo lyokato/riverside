@@ -27,7 +27,7 @@ defmodule Riverside.Connection do
 
     peer = PeerAddress.gather(req)
 
-    Logger.info "WebSocket - incoming new request: #{peer}"
+    Logger.info "<WebSocket> incoming new request: #{peer}"
 
     handler = Keyword.fetch!(opts, :handler)
 
@@ -38,7 +38,7 @@ defmodule Riverside.Connection do
         {:upgrade, :protocol, :cowboy_websocket, req, state}
 
       {:error, reason, req2} ->
-        Logger.info "WebSocket - failed to authenticate by reason: #{reason}, shutdown"
+        Logger.info "<WebSocket> failed to authenticate by reason: #{reason}, shutdown"
         {:shutdown, req2, nil}
 
     end

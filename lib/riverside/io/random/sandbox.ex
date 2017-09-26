@@ -20,19 +20,19 @@ defmodule Riverside.IO.Random.Sandbox do
 
   def hex(len) do
     {:ok, hex} = GenServer.call(__MODULE__, {:hex, len})
-    Logger.debug "[Sandbox] Random.hex/1 returns: #{hex}"
+    Logger.debug "<Random.Sandbox> hex/1 returns: #{hex}"
     hex
   end
 
   def bigint() do
     {:ok, bigint} = GenServer.call(__MODULE__, :bigint)
-    Logger.debug "[Sandbox] Random.bigint/0 returns: #{bigint}"
+    Logger.debug "<Random.Sandbox> bigint/0 returns: #{bigint}"
     bigint
   end
 
   def uuid() do
     {:ok, uuid} = GenServer.call(__MODULE__, :uuid)
-    Logger.debug "[Sandbox] Random.uuid/0 returns: #{uuid}"
+    Logger.debug "<Random.Sandbox> uuid/0 returns: #{uuid}"
     uuid
   end
 
@@ -43,7 +43,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_hex(list) when is_list(list) do
-    Logger.debug "[Sandbox] Random HEX refreshes to #{inspect list}"
+    Logger.debug "<Random.Sandbox> hex refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_hex_list, list})
   end
   def set_hex(hex) do
@@ -57,7 +57,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_bigint(list) when is_list(list) do
-    Logger.debug "[Sandbox] Random BigInt refreshes to #{inspect list}"
+    Logger.debug "<Random.Sandbox> bigint refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_bigint_list, list})
   end
   def set_bigint(bigint) do
@@ -71,7 +71,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_uuid(list) when is_list(list) do
-    Logger.debug "[Sandbox] Random UUI refreshes to #{inspect list}"
+    Logger.debug "<Random.Sandbox> Random UUI refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_uuid_list, list})
   end
   def set_uuid(uuid) do
@@ -131,7 +131,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   defp shift_stack([]) do
-    raise "No more dummy data, set enough amount of them"
+    raise "<Random.Sandbox> No more dummy data, set enough amount of them"
   end
   defp shift_stack([first|rest]) do
     {first, rest}
