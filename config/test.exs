@@ -15,6 +15,9 @@ config :riverside, TestHandler,
 config :riverside, TestEchoHandler,
   connection_timeout: 60_000
 
+config :riverside, TestStatsHandler,
+  connection_timeout: 60_000
+
 config :riverside, TestAuthQueryHandler,
   connection_timeout: 60_000
 

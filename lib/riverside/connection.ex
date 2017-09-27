@@ -95,6 +95,8 @@ defmodule Riverside.Connection do
 
     Logger.debug "#{state.session} @deliver"
 
+    Stats.countup_outgoing_messages()
+
     {:reply, {type, msg}, req, state, :hibernate}
   end
 
@@ -186,7 +188,7 @@ defmodule Riverside.Connection do
 
   defp handle_frame(req, type, data, %{handler: handler, session: session}=state) do
 
-    Stats.countup_messages()
+    Stats.countup_incoming_messages()
 
     case Session.countup_messages(session, handler.__transmission_limit__) do
 
