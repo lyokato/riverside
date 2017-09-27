@@ -17,7 +17,7 @@ defmodule Riverside.Codec.JSON do
         {:ok, value}
 
       {:error, exception} ->
-        Logger.debug "JSON: failed to encode: #{inspect exception}"
+        Logger.debug "<Riverside.Codec.JSON> failed to encode: #{inspect exception}"
         {:error, :invalid_message}
 
     end
@@ -31,7 +31,7 @@ defmodule Riverside.Codec.JSON do
           {:ok, value}
 
         {:error, exception} ->
-          Logger.debug "JSON: failed to decode: #{inspect exception}"
+          Logger.debug "<Riverside.Codec.JSON> failed to decode: #{inspect exception}"
           {:error, :invalid_message}
 
       end

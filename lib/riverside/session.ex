@@ -41,7 +41,7 @@ defmodule Riverside.Session do
   end
 
   defp create_abbreviation(user_id, session_id) do
-    "<#{@abbreviation_header}:#{user_id}:#{String.slice(session_id, 0..5)}>"
+    "#{@abbreviation_header}:#{user_id}:#{String.slice(session_id, 0..5)}"
   end
 
   @spec should_delegate_exit?(t, pid) :: boolean

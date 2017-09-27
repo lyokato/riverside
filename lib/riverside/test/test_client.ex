@@ -89,7 +89,7 @@ defmodule Riverside.Test.TestClient do
         {:ok, value} -> {:ok, value}
 
         {:error, reason} ->
-          Logger.warn "TestClient - failed to decode received message: #{reason}"
+          Logger.warn "<Riverside.TestClient> failed to decode received message: #{reason}"
           {:error, :bad_format}
 
       end
@@ -147,7 +147,7 @@ defmodule Riverside.Test.TestClient do
         {:noreply, state}
 
       {:error, reason} ->
-        Logger.warn "TestClient - failed to format message: #{reason}"
+        Logger.warn "<Riverside.TestClient> failed to format message: #{reason}"
         {:noreply, state}
     end
   end

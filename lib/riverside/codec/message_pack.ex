@@ -17,7 +17,7 @@ defmodule Riverside.Codec.MessagePack do
         {:ok, value}
 
       {:error, exception} ->
-        Logger.debug "MessagePack: failed to encode: #{inspect exception}"
+        Logger.debug "<Riverside.Codec.MessagePack> failed to encode: #{inspect exception}"
         {:error, :invalid_message}
 
     end
@@ -31,7 +31,7 @@ defmodule Riverside.Codec.MessagePack do
           {:ok, value}
 
         {:error, exception} ->
-          Logger.debug "MessagePack: failed to decode: #{inspect exception}"
+          Logger.debug "<Riverside.Codec.MessagePack> failed to decode: #{inspect exception}"
           {:error, :invalid_message}
 
       end

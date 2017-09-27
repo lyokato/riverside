@@ -20,19 +20,19 @@ defmodule Riverside.IO.Random.Sandbox do
 
   def hex(len) do
     {:ok, hex} = GenServer.call(__MODULE__, {:hex, len})
-    Logger.debug "<Random.Sandbox> hex/1 returns: #{hex}"
+    Logger.debug "<Riverside.Random.Sandbox> hex/1 returns: #{hex}"
     hex
   end
 
   def bigint() do
     {:ok, bigint} = GenServer.call(__MODULE__, :bigint)
-    Logger.debug "<Random.Sandbox> bigint/0 returns: #{bigint}"
+    Logger.debug "<Riverside.Random.Sandbox> bigint/0 returns: #{bigint}"
     bigint
   end
 
   def uuid() do
     {:ok, uuid} = GenServer.call(__MODULE__, :uuid)
-    Logger.debug "<Random.Sandbox> uuid/0 returns: #{uuid}"
+    Logger.debug "<Riverside.Random.Sandbox> uuid/0 returns: #{uuid}"
     uuid
   end
 
@@ -43,7 +43,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_hex(list) when is_list(list) do
-    Logger.debug "<Random.Sandbox> hex refreshes to #{inspect list}"
+    Logger.debug "<Riverside.Random.Sandbox> hex refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_hex_list, list})
   end
   def set_hex(hex) do
@@ -57,7 +57,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_bigint(list) when is_list(list) do
-    Logger.debug "<Random.Sandbox> bigint refreshes to #{inspect list}"
+    Logger.debug "<Riverside.Random.Sandbox> bigint refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_bigint_list, list})
   end
   def set_bigint(bigint) do
@@ -71,7 +71,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_uuid(list) when is_list(list) do
-    Logger.debug "<Random.Sandbox> Random UUI refreshes to #{inspect list}"
+    Logger.debug "<Riverside.Random.Sandbox> Random UUI refreshes to #{inspect list}"
     GenServer.call(__MODULE__, {:set_uuid_list, list})
   end
   def set_uuid(uuid) do
@@ -131,7 +131,7 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   defp shift_stack([]) do
-    raise "<Random.Sandbox> No more dummy data, set enough amount of them"
+    raise "<Riverside.Random.Sandbox> No more dummy data, set enough amount of them"
   end
   defp shift_stack([first|rest]) do
     {first, rest}

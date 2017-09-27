@@ -91,7 +91,7 @@ defmodule Riverside do
 
       defp __start_authentication__(:default, params, headers, peer, req) do
 
-        Logger.debug "<WebSocket> Default Authentication"
+        Logger.debug "<Riverside.Connection> Default Authentication"
 
         Riverside.Authenticator.Default.authenticate(req, [],
           &(authenticate(&1, params, headers, peer)))
@@ -99,7 +99,7 @@ defmodule Riverside do
 
       defp __start_authentication__({:bearer_token, realm}, params, headers, peer, req) do
 
-        Logger.debug "<WebSocket> BearerToken Authentication"
+        Logger.debug "<Riverside.Connection> BearerToken Authentication"
 
         Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
           &(authenticate(&1, params, headers, peer)))
@@ -107,7 +107,7 @@ defmodule Riverside do
 
       defp __start_authentication__({:basic, realm}, params, headers, peer, req) do
 
-        Logger.debug "<WebSocket> Basic Authentication"
+        Logger.debug "<Riverside.Connection> Basic Authentication"
 
         Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
           &(authenticate(&1, params, headers, peer)))
@@ -115,7 +115,7 @@ defmodule Riverside do
 
       defp __start_authentication__(cred, _params, _headers, peer, req) do
 
-        Logger.warn "<WebSocket> Unsupported authentication credential: #{inspect cred}"
+        Logger.warn "<Riverside.Connection> Unsupported authentication credential: #{inspect cred}"
 
         {:error, :invalid_request, req}
 
@@ -137,7 +137,7 @@ defmodule Riverside do
 
         else
 
-          Logger.debug "#{session} unsupported frame type: #{frame_type}"
+          Logger.info "<Riverside.#{session}> unsupported frame type: #{frame_type}"
 
           {:error, :unsupported}
 
