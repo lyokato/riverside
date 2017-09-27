@@ -110,7 +110,7 @@ defmodule Riverside.Connection do
 
       state2 = %{state| session: session2}
 
-      handler_handle_info({:EXIT, pid, reason}, req, state2)
+      handler_info({:EXIT, pid, reason}, req, state2)
 
     else
 
@@ -124,11 +124,11 @@ defmodule Riverside.Connection do
 
     Logger.info "#{state.session} @info: #{inspect event}"
 
-    handler_handle_info(event, req, state)
+    handler_info(event, req, state)
 
   end
 
-  defp handler_handle_info(event, req, state) do
+  defp handler_info(event, req, state) do
 
     case state.handler.handle_info(event, state.session, state.handler_state) do
 
