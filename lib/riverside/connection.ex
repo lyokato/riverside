@@ -9,18 +9,23 @@ defmodule Riverside.Connection do
   alias Riverside.Session
   alias Riverside.Stats
 
-  @type t :: %__MODULE__{handler:       module,
-                         session:       Session.t,
-                         handler_state: any}
+  @type shutdown_reason :: :too_many_messages
 
-  defstruct handler:       nil,
-            session:       nil,
-            handler_state: nil
+  @type t :: %__MODULE__{handler:         module,
+                         session:         Session.t,
+                         shutdown_reason: shutdown_reason,
+                         handler_state:   any}
+
+  defstruct handler:         nil,
+            session:         nil,
+            shutdown_reason: nil,
+            handler_state:   nil
 
   def new(handler, user_id, peer, handler_state) do
-    %__MODULE__{handler:       handler,
-                session:       Session.new(user_id, peer),
-                handler_state: handler_state}
+    %__MODULE__{handler:         handler,
+                session:         Session.new(user_id, peer),
+                shutdown_reason: nil,
+                handler_state:   handler_state}
   end
 
   def init(_, req, opts) do
@@ -175,11 +180,21 @@ defmodule Riverside.Connection do
 
   end
 
+  def websocket_terminate(reason, _req, %{shutdown_reason: nil}=state) do
+
+    Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+
+    state.handler.terminate(reason, state.session, state.handler_state)
+
+    Stats.countdown_connections()
+
+    :ok
+  end
   def websocket_terminate(reason, _req, state) do
 
     Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
-    state.handler.terminate(state.session, state.handler_state)
+    state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
 
     Stats.countdown_connections()
 
@@ -208,7 +223,7 @@ defmodule Riverside.Connection do
 
       {:error, :too_many_messages} ->
         Logger.warn "<Riverside.#{session}> too many messages: #{Session.peer_address(session)}"
-        {:shutdown, req, state}
+        {:shutdown, req, %{state| shutdown_reason: :too_many_messages}}
 
     end
 
