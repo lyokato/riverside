@@ -31,7 +31,7 @@ defmodule Riverside.PeerAddress do
 
     {address, port, x_forwarded_for} = CowboyUtil.peer(req)
 
-    %__MODULE__{address: :inet_parse.ntoa(address),
+    %__MODULE__{address: "#{:inet_parse.ntoa(address)}",
                 port: port,
                 x_forwarded_for: x_forwarded_for}
 
