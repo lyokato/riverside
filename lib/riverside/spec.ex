@@ -43,9 +43,10 @@ defmodule Riverside.Spec do
 
       supervisor(Riverside.Supervisor, [[session_module, opts]]),
 
-      worker(GracefulStopper.Plug,
-        [[timeout: 0, endpoint: Riverside.Supervisor]],
-         [shutdown: 10_000]
+      worker(TheEnd.AcceptanceStopper,
+        [[timeout:  0,
+          endpoint: Riverside.Supervisor,
+          gatherer: TheEnd.ListenerGatherer.Plug]]
        )
     ]
 
