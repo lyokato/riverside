@@ -3,7 +3,7 @@ defmodule Riverside.Mixfile do
 
   def project do
     [app: :riverside,
-     version: "0.1.9",
+     version: "0.1.11",
      elixir: "~> 1.4",
      package: package(),
      build_embedded: Mix.env == :prod,
@@ -34,7 +34,7 @@ defmodule Riverside.Mixfile do
      {:msgpax, "~> 2.0"},
      {:socket, "~> 0.3.7"},
      #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
-     {:graceful_stopper, github: "lyokato/graceful_stopper", tag: "0.1.1" },
+     {:the_end, github: "lyokato/the_end", tag: "0.1.2" },
      {:plug, "~> 1.3"}
     ]
   end
