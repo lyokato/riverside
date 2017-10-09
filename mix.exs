@@ -34,7 +34,7 @@ defmodule Riverside.Mixfile do
      {:msgpax, "~> 2.0"},
      {:socket, "~> 0.3.7"},
      #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
-     {:the_end, github: "lyokato/the_end", tag: "0.1.2" },
+     {:the_end, github: "lyokato/the_end", tag: "1.0.0" },
      {:plug, "~> 1.3"}
     ]
   end
