@@ -10,6 +10,11 @@ defmodule Riverside do
 
   defmodule Behaviour do
 
+    @type terminate_reason :: {:normal, :shutdown | :timeout}
+                            | {:remote, :closed}
+                            | {:remote, :cowboy_websocket.close_code, binary}
+                            | {:error, :badencoding | :badframe | :closed | :too_many_massages | atom}
+
     @callback __handle_authentication__(req  :: :cowboy_req.req,
                                         peer :: PeerAddress.t)
       :: Authenticator.auth_result
@@ -45,7 +50,8 @@ defmodule Riverside do
                           state   :: any)
       :: {:ok, Session.t}
 
-    @callback terminate(session :: Session.t,
+    @callback terminate(reason  :: terminate_reason,
+                        session :: Session.t,
                         state   :: any)
       :: :ok
 
@@ -226,14 +232,14 @@ defmodule Riverside do
       def handle_message(_msg, session, state), do: {:ok, session, state}
 
       @impl true
-      def terminate(_session, _state), do: :ok
+      def terminate(_reason, _session, _state), do: :ok
 
       defoverridable [
         authenticate: 4,
         init: 2,
         handle_info: 3,
         handle_message: 3,
-        terminate: 2
+        terminate: 3
       ]
 
     end

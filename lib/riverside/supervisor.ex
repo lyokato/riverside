@@ -1,7 +1,7 @@
 defmodule Riverside.Supervisor do
 
   use Supervisor
-  alias Riverside.Util.ModuleUtil
+  alias Riverside.Config
 
   @default_port 3000
   @default_path "/"
@@ -25,7 +25,7 @@ defmodule Riverside.Supervisor do
 
   defp cowboy_opts(router, [module, opts]) do
 
-    ModuleUtil.ensure_loaded(module)
+    Config.ensure_module_loaded(module)
 
     port = Keyword.get(opts, :port, @default_port)
     path = Keyword.get(opts, :path, @default_path)
