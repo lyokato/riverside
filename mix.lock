@@ -12,5 +12,5 @@
   "ranch": {:hex, :ranch, "1.4.0", "10272f95da79340fa7e8774ba7930b901713d272905d0012b06ca6d994f8826b", [:rebar3], []},
   "secure_random": {:hex, :secure_random, "0.5.1", "c5532b37c89d175c328f5196a0c2a5680b15ebce3e654da37129a9fe40ebf51b", [:mix], []},
   "socket": {:hex, :socket, "0.3.12", "4a6543815136503fee67eff0932da1742fad83f84c49130c854114153cc549a6", [:mix], []},
-  "the_end": {:git, "https://github.com/lyokato/the_end.git", "2474e8f0e527090a41432f51d6ce7932207e807b", [tag: "0.1.0"]},
+  "the_end": {:git, "https://github.com/lyokato/the_end.git", "08c1af820909cbaff313eaa90d0bae32a7d70086", [tag: "1.0.0"]},
   "uuid": {:hex, :uuid, "1.1.7", "007afd58273bc0bc7f849c3bdc763e2f8124e83b957e515368c498b641f7ab69", [:mix], []}}
