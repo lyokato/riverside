@@ -127,6 +127,7 @@ defmodule Riverside do
 
       end
 
+      @impl true
       def __handle_data__(frame_type, data, session, state) do
 
         if @codec.frame_type === frame_type do
