@@ -21,6 +21,8 @@ defmodule Riverside do
 
     @callback __connection_timeout__() :: non_neg_integer
 
+    @callback __max_connections__() :: non_neg_integer
+
     @callback __transmission_limit__() :: keyword
 
     @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
@@ -68,6 +70,7 @@ defmodule Riverside do
 
       @auth_type          Keyword.get(config, :authentication, :default)
       @connection_timeout Keyword.get(config, :connection_timeout, 120_000)
+      @max_connections    Keyword.get(config, :max_connections, 65536)
       @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
 
       @transmission_limit Riverside.Config.transmission_limit(config)
@@ -84,6 +87,9 @@ defmodule Riverside do
 
       @impl true
       def __connection_timeout__, do: @connection_timeout
+
+      @impl true
+      def __max_connections__, do: @max_connections
 
       @impl true
       def __handle_authentication__(req, peer) do
