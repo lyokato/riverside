@@ -36,17 +36,28 @@ defmodule Riverside.Connection do
 
     handler = Keyword.fetch!(opts, :handler)
 
-    case handler.__handle_authentication__(req, peer) do
+    if Stats.number_of_current_connections() >= handler.__max_connections__() do
 
-      {:ok, user_id, handler_state} ->
-        state = new(handler, user_id, peer, handler_state)
-        {:upgrade, :protocol, :cowboy_websocket, req, state}
+      Logger.info "<Riverside.Connection> connection number is over limit"
 
-      {:error, reason, req2} ->
-        Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
-        {:shutdown, req2, nil}
+      {:shutdown, req, nil}
+
+    else
+
+      case handler.__handle_authentication__(req, peer) do
+
+        {:ok, user_id, handler_state} ->
+          state = new(handler, user_id, peer, handler_state)
+          {:upgrade, :protocol, :cowboy_websocket, req, state}
+
+        {:error, reason, req2} ->
+          Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
+          {:shutdown, req2, nil}
+
+      end
 
     end
+
   end
 
   def terminate(_reason, _req, _state) do
@@ -57,17 +68,28 @@ defmodule Riverside.Connection do
 
     Logger.debug "<Riverside.#{state.session}> @init"
 
-    Process.flag(:trap_exit, true)
+    if Stats.number_of_current_connections() >= state.handler.__max_connections__() do
 
-    send self(), :post_init
+      Logger.info "<Riverside.Connection> connection number is over limit"
 
-    Stats.countup_connections()
+      {:shutdown, req}
 
-    LocalDelivery.register(state.session.user_id, state.session.id)
+    else
 
-    timeout = state.handler.__connection_timeout__
+      Process.flag(:trap_exit, true)
 
-    {:ok, :cowboy_req.compact(req), state, timeout, :hibernate}
+      send self(), :post_init
+
+      Stats.countup_connections()
+
+      LocalDelivery.register(state.session.user_id, state.session.id)
+
+      timeout = state.handler.__connection_timeout__
+
+      {:ok, :cowboy_req.compact(req), state, timeout, :hibernate}
+
+    end
+
 
   end
 

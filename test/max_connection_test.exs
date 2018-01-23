@@ -1,4 +1,4 @@
-defmodule TestEchoHandler do
+defmodule TestMaxConnectionHandler do
 
   require Logger
   use Riverside, otp_app: :riverside
@@ -14,7 +14,7 @@ defmodule TestEchoHandler do
 
 end
 
-defmodule Riverside.EchoTest do
+defmodule Riverside.MaxConnectionTest do
 
   use ExUnit.Case
 
@@ -31,7 +31,7 @@ defmodule Riverside.EchoTest do
 
     Riverside.Stats.start_link
 
-    {:ok, pid} = TestServer.start(TestEchoHandler, 3000, "/")
+    {:ok, pid} = TestServer.start(TestMaxConnectionHandler, 3000, "/")
 
     ExUnit.Callbacks.on_exit(fn ->
       Riverside.Test.TestServer.stop(pid)
@@ -40,20 +40,9 @@ defmodule Riverside.EchoTest do
     :ok
   end
 
-  test "echo" do
-    {:ok, client} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
-
-    TestClient.test_message(%{
-      sender: client,
-      message: %{"content" => "Hello"},
-      receivers: [%{receiver: client, tests: [
-        fn msg ->
-          assert Map.has_key?(msg, "content")
-          assert msg["content"] == "Hello"
-        end
-      ]}]
-    })
-
+  test "over limit connections" do
+    assert {:ok, client1} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
+    assert {:error, _reason} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
   end
 
 end
