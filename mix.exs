@@ -33,7 +33,7 @@ defmodule Riverside.Mixfile do
      {:poison, "~> 3.1"},
      {:msgpax, "~> 2.0"},
      {:socket, "~> 0.3.12"},
-     {:the_end, "~> 1.0.0"},
+     {:the_end, "~> 1.1.0"},
      #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:plug, "~> 1.4"}
     ]
