@@ -38,7 +38,8 @@ defmodule Riverside.Stats do
     GenServer.cast(__MODULE__, :countdown_connections)
   end
 
-  def start_link do
+  def start_link(_opts), do: start_link()
+  def start_link() do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
