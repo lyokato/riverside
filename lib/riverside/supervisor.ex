@@ -1,50 +1,24 @@
 defmodule Riverside.Supervisor do
 
   use Supervisor
-  alias Riverside.Config
 
-  @default_port 3000
-  @default_path "/"
-
-  def start_link(opts) do
-    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def init(opts) do
-    children(opts) |> supervise(strategy: :one_for_one)
+  def init([handler, opts]) do
+    children(handler, opts)
+    |> Supervisor.init(strategy: :one_for_one)
   end
 
-  def children(opts) do
-
-    router = Keyword.get(opts, :router, Riverside.Router)
-
-    [Plug.Adapters.Cowboy.child_spec(:http, router, [],
-      cowboy_opts(router, opts))]
-
-  end
-
-  defp cowboy_opts(router, [module, opts]) do
-
-    Config.ensure_module_loaded(module)
-
-    port = Keyword.get(opts, :port, @default_port)
-    path = Keyword.get(opts, :path, @default_path)
-
-    cowboy_opts = [port: port, dispatch: dispatch_opts(module, router, path)]
-
-    if Keyword.get(opts, :reuse_port, false) do
-      cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
-    else
-      cowboy_opts
-    end
-
-  end
-
-  defp dispatch_opts(module, router, path) do
+  defp children(handler, opts) do
     [
-      {:_, [
-        {path, Riverside.Connection, [handler: module]},
-        {:_, Plug.Adapters.Cowboy.Handler, {router, []}}
+      Riverside.Stats,
+      {Riverside.EndpointSupervisor, [handler, opts]},
+      {TheEnd.AcceptanceStopper, [
+        timeout:  0,
+        endpoint: Riverside.Supervisor,
+        gatherer: TheEnd.ListenerGatherer.Plug
       ]}
     ]
   end

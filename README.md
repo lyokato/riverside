@@ -8,7 +8,7 @@ Simple WebSocket Server Framework for Elixir
 
 ```elixir
 def deps do
-  [{:riverside, github: "lyokato/riverside", tag: "0.1.16"}]
+  [{:riverside, github: "lyokato/riverside", tag: "0.2.1"}]
 end
 ```
 
@@ -88,15 +88,10 @@ defmodule MyApp
 
     children = [
         # other children...
+      {Riverside, [MyApp.Handler, [port: 3000, path: "/"]]},
      ]
 
-    rs_children = Riverside.Spec.children(MyApp.Handler,
-      port: 3000,
-      path: "/"])
-
-    all_children = children ++ rs_children
-
-    Supervisor.start_link(all_children, opts)
+    Supervisor.start_link(children, opts)
 
   end
 
@@ -119,7 +114,7 @@ Implement following callback functions which **Riverside** requires.
 ### Spec Configuration
 
 ```elixir
-Riverside.Spec.children(MyApp.Handler, opts)
+{Riverside, [MyApp.Handler, [port: 3000, path: "/"]]},
 ```
 
 First argument is the Handler module you prepared beforehand.

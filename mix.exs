@@ -3,8 +3,8 @@ defmodule Riverside.Mixfile do
 
   def project do
     [app: :riverside,
-     version: "0.1.16",
-     elixir: "~> 1.4",
+     version: "0.2.1",
+     elixir: "~> 1.5",
      package: package(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -33,7 +33,7 @@ defmodule Riverside.Mixfile do
      {:poison, "~> 3.1"},
      {:msgpax, "~> 2.0"},
      {:socket, "~> 0.3.12"},
-     {:the_end, "~> 1.0.0"},
+     {:the_end, "~> 1.1.0"},
      #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:plug, "~> 1.4"}
     ]

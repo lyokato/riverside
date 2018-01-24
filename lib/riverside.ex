@@ -252,4 +252,8 @@ defmodule Riverside do
     end
   end
 
+  def child_spec(args) do
+    Riverside.Supervisor.child_spec(args)
+  end
+
 end
