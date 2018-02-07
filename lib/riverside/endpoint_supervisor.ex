@@ -6,24 +6,24 @@ defmodule Riverside.EndpointSupervisor do
   @default_port 3000
   @default_path "/"
 
-  def start_link(opts) do
-    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link([handler, opts]) do
+    Supervisor.start_link(__MODULE__, [handler, opts], name: __MODULE__)
   end
 
-  def init(opts) do
-    children(opts) |> supervise(strategy: :one_for_one)
+  def init([handler, opts]) do
+    children(handler, opts) |> supervise(strategy: :one_for_one)
   end
 
-  def children(opts) do
+  def children(handler, opts) do
 
     router = Keyword.get(opts, :router, Riverside.Router)
 
     [Plug.Adapters.Cowboy.child_spec(:http, router, [],
-      cowboy_opts(router, opts))]
+      cowboy_opts(router, handler, opts))]
 
   end
 
-  defp cowboy_opts(router, [module, opts]) do
+  defp cowboy_opts(router, module, opts) do
 
     Config.ensure_module_loaded(module)
 
