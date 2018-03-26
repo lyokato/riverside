@@ -5,6 +5,7 @@ defmodule Riverside.EndpointSupervisor do
 
   @default_port 3000
   @default_path "/"
+  @default_timeout 60_000
 
   def start_link([handler, opts]) do
     Supervisor.start_link(__MODULE__, [handler, opts], name: __MODULE__)
@@ -18,8 +19,13 @@ defmodule Riverside.EndpointSupervisor do
 
     router = Keyword.get(opts, :router, Riverside.Router)
 
-    [Plug.Adapters.Cowboy.child_spec(:http, router, [],
-      cowboy_opts(router, handler, opts))]
+    [{
+      Plug.Adapters.Cowboy2, [
+        schema: :http,
+        plug:    router,
+        options: cowboy_opts(router, handler, opts)
+      ]
+    }]
 
   end
 
@@ -27,10 +33,15 @@ defmodule Riverside.EndpointSupervisor do
 
     Config.ensure_module_loaded(module)
 
-    port = Keyword.get(opts, :port, @default_port)
-    path = Keyword.get(opts, :path, @default_path)
+    port         = Keyword.get(opts, :port, @default_port)
+    path         = Keyword.get(opts, :path, @default_path)
+    idle_timeout = Keyword.get(opts, :idle_timeout, @default_timeout)
 
-    cowboy_opts = [port: port, dispatch: dispatch_opts(module, router, path)]
+    cowboy_opts = [
+      port:             port,
+      dispatch:         dispatch_opts(module, router, path),
+      protocol_options: %{idle_timeout: idle_timeout}
+    ]
 
     if Keyword.get(opts, :reuse_port, false) do
       cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
@@ -44,7 +55,7 @@ defmodule Riverside.EndpointSupervisor do
     [
       {:_, [
         {path, Riverside.Connection, [handler: module]},
-        {:_, Plug.Adapters.Cowboy.Handler, {router, []}}
+        {:_, Plug.Adapters.Cowboy2.Handler, {router, []}}
       ]}
     ]
   end

@@ -19,8 +19,6 @@ defmodule Riverside do
                                         peer :: PeerAddress.t)
       :: Authenticator.auth_result
 
-    @callback __connection_timeout__() :: non_neg_integer
-
     @callback __max_connections__() :: non_neg_integer
 
     @callback __transmission_limit__() :: keyword
@@ -68,10 +66,9 @@ defmodule Riverside do
 
       config = Riverside.Config.load(__MODULE__, opts)
 
-      @auth_type          Keyword.get(config, :authentication, :default)
-      @connection_timeout Keyword.get(config, :connection_timeout, 120_000)
-      @max_connections    Keyword.get(config, :max_connections, 65536)
-      @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
+      @auth_type       Keyword.get(config, :authentication, :default)
+      @max_connections Keyword.get(config, :max_connections, 65536)
+      @codec           Keyword.get(config, :codec, Riverside.Codec.JSON)
 
       @transmission_limit Riverside.Config.transmission_limit(config)
 
@@ -84,9 +81,6 @@ defmodule Riverside do
 
       @impl true
       def __transmission_limit__, do: @transmission_limit
-
-      @impl true
-      def __connection_timeout__, do: @connection_timeout
 
       @impl true
       def __max_connections__, do: @max_connections
