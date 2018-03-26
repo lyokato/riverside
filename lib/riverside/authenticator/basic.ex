@@ -22,7 +22,7 @@ defmodule Riverside.Authenticator.Basic do
         {:error, :unauthorized, req2}
 
       {:error, :invalid_request} ->
-        req2 = put_authenticate_header(req, 400, realm)
+        req2 = put_authenticate_header(req, 401, realm)
         {:error, :bad_request, req2}
 
       {:error, :not_found} ->
