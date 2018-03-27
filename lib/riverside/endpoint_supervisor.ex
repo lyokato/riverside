@@ -12,7 +12,8 @@ defmodule Riverside.EndpointSupervisor do
   end
 
   def init([handler, opts]) do
-    children(handler, opts) |> supervise(strategy: :one_for_one)
+    children(handler, opts)
+    |> Supervisor.init(strategy: :one_for_one)
   end
 
   def children(handler, opts) do
@@ -21,7 +22,7 @@ defmodule Riverside.EndpointSupervisor do
 
     [{
       Plug.Adapters.Cowboy2, [
-        schema: :http,
+        scheme: :http,
         plug:    router,
         options: cowboy_opts(router, handler, opts)
       ]
@@ -40,7 +41,7 @@ defmodule Riverside.EndpointSupervisor do
     cowboy_opts = [
       port:             port,
       dispatch:         dispatch_opts(module, router, path),
-      protocol_options: %{idle_timeout: idle_timeout}
+      protocol_options: [{:idle_timeout, idle_timeout}]
     ]
 
     if Keyword.get(opts, :reuse_port, false) do
