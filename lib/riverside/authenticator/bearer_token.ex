@@ -4,8 +4,6 @@ defmodule Riverside.Authenticator.BearerToken do
 
   alias Riverside.Util.CowboyUtil
 
-  require Logger
-
   def authenticate(req, opts, f) do
 
     realm = Keyword.get(opts, :realm, "")
