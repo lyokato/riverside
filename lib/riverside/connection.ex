@@ -1,6 +1,6 @@
 defmodule Riverside.Connection do
 
-  @behaviour :cowboy_websocket_handler
+  @behaviour :cowboy_websocket
 
   require Logger
 
@@ -28,7 +28,7 @@ defmodule Riverside.Connection do
                 handler_state:   handler_state}
   end
 
-  def init(_, req, opts) do
+  def init(req, opts) do
 
     peer = PeerAddress.gather(req)
 
@@ -40,7 +40,7 @@ defmodule Riverside.Connection do
 
       Logger.warn "<Riverside.Connection> connection number is over limit"
 
-      {:shutdown, req, nil}
+      {:ok, req, nil}
 
     else
 
@@ -48,11 +48,11 @@ defmodule Riverside.Connection do
 
         {:ok, user_id, handler_state} ->
           state = new(handler, user_id, peer, handler_state)
-          {:upgrade, :protocol, :cowboy_websocket, req, state}
+          {:cowboy_websocket, req, state}
 
         {:error, reason, req2} ->
           Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
-          {:shutdown, req2, nil}
+          {:ok, req2, nil}
 
       end
 
@@ -60,11 +60,7 @@ defmodule Riverside.Connection do
 
   end
 
-  def terminate(_reason, _req, _state) do
-    :ok
-  end
-
-  def websocket_init(_type, req, state) do
+  def websocket_init(state) do
 
     Logger.debug "<Riverside.#{state.session}> @init"
 
@@ -72,7 +68,7 @@ defmodule Riverside.Connection do
 
       Logger.warn "<Riverside.Connection> connection number is over limit"
 
-      {:shutdown, req}
+      {:stop, state}
 
     else
 
@@ -84,16 +80,14 @@ defmodule Riverside.Connection do
 
       LocalDelivery.register(state.session.user_id, state.session.id)
 
-      timeout = state.handler.__connection_timeout__
-
-      {:ok, :cowboy_req.compact(req), state, timeout, :hibernate}
+      {:ok, state}
 
     end
 
 
   end
 
-  def websocket_info(:post_init, req, state) do
+  def websocket_info(:post_init, state) do
 
     Logger.debug "<Riverside.#{state.session}> @post_init"
 
@@ -101,33 +95,33 @@ defmodule Riverside.Connection do
 
       {:ok, session2, handler_state2} ->
         state2 = %{state| session: session2, handler_state: handler_state2}
-        {:ok, req, state2, :hibernate}
+        {:ok, state2, :hibernate}
 
       {:error, reason} ->
         Logger.info "<Riverside.#{state.session}> failed to initialize: #{inspect reason}"
-        {:shutdown, req, state}
+        {:stop, state}
 
     end
 
   end
 
-  def websocket_info(:stop, req, state) do
+  def websocket_info(:stop, state) do
 
     Logger.debug "<Riverside.#{state.session}> @stop"
 
-    {:shutdown, req, state}
+    {:stop, state}
   end
 
-  def websocket_info({:deliver, type, msg}, req, state) do
+  def websocket_info({:deliver, type, msg}, state) do
 
     Logger.debug "<Riverside.#{state.session}> @deliver"
 
     Stats.countup_outgoing_messages()
 
-    {:reply, {type, msg}, req, state, :hibernate}
+    {:reply, {type, msg}, state, :hibernate}
   end
 
-  def websocket_info({:EXIT, pid, reason}, req, %{session: session}=state) do
+  def websocket_info({:EXIT, pid, reason}, %{session: session}=state) do
 
     Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
 
@@ -137,72 +131,72 @@ defmodule Riverside.Connection do
 
       state2 = %{state| session: session2}
 
-      handler_info({:EXIT, pid, reason}, req, state2)
+      handler_info({:EXIT, pid, reason}, state2)
 
     else
 
-      {:shutdown, req, state}
+      {:stop, state}
 
     end
 
   end
 
-  def websocket_info(event, req, state) do
+  def websocket_info(event, state) do
 
     Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
 
-    handler_info(event, req, state)
+    handler_info(event, state)
 
   end
 
-  defp handler_info(event, req, state) do
+  defp handler_info(event, state) do
 
     case state.handler.handle_info(event, state.session, state.handler_state) do
 
       {:ok, session2, handler_state2} ->
         state2 = %{state| session: session2, handler_state: handler_state2}
-        {:ok, req, state2}
+        {:ok, state2}
 
       # TODO support reply?
       _other ->
-        {:shutdown, req, state}
+        {:stop, state}
     end
 
   end
 
-  def websocket_handle({:ping, data}, req, state) do
+  def websocket_handle({:ping, data}, state) do
 
     Logger.debug "<Riverside.#{state.session}> @ping"
 
-    handle_frame(req, :ping, data, state)
+    handle_frame(:ping, data, state)
 
   end
 
-  def websocket_handle({:binary, data}, req, state) do
+  def websocket_handle({:binary, data}, state) do
 
     Logger.debug "<Riverside.#{state.session}> @binary"
 
-    handle_frame(req, :binary, data, state)
+    handle_frame(:binary, data, state)
 
   end
 
-  def websocket_handle({:text, data}, req, state) do
+  def websocket_handle({:text, data}, state) do
 
     Logger.debug "<Riverside.#{state.session}> @text"
 
-    handle_frame(req, :text, data, state)
+    handle_frame(:text, data, state)
 
   end
 
-  def websocket_handle(event, req, state) do
+  def websocket_handle(event, state) do
 
     Logger.debug "<Riverside.#{state.session}> handle: unsupported event #{inspect event}"
 
-    {:ok, req, state}
+    {:ok, state}
 
   end
 
-  def websocket_terminate(reason, _req, %{shutdown_reason: nil}=state) do
+  def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
     Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
@@ -212,7 +206,7 @@ defmodule Riverside.Connection do
 
     :ok
   end
-  def websocket_terminate(reason, _req, state) do
+  def terminate(reason, _req, state) do
 
     Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
@@ -223,7 +217,7 @@ defmodule Riverside.Connection do
     :ok
   end
 
-  defp handle_frame(req, type, data, %{handler: handler, session: session}=state) do
+  defp handle_frame(type, data, %{handler: handler, session: session}=state) do
 
     Stats.countup_incoming_messages()
 
@@ -235,17 +229,17 @@ defmodule Riverside.Connection do
 
           {:ok, session3, handler_state3} ->
             state3 = %{state2| session: session3, handler_state: handler_state3}
-            {:ok, req, state3, :hibernate}
+            {:ok, state3, :hibernate}
 
           {:error, reason} ->
             Logger.info "<Riverside.#{session2}> failed to handle frame_type #{inspect type}: #{inspect reason}"
-            {:ok, req, state2}
+            {:ok, state2}
 
         end
 
       {:error, :too_many_messages} ->
         Logger.warn "<Riverside.#{session}> too many messages: #{Session.peer_address(session)}"
-        {:shutdown, req, %{state| shutdown_reason: :too_many_messages}}
+        {:stop, %{state| shutdown_reason: :too_many_messages}}
 
     end
 

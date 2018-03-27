@@ -41,8 +41,10 @@ defmodule Riverside.MaxConnectionTest do
   end
 
   test "over limit connections" do
-    assert {:ok, client1} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
-    assert {:error, _reason} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
+    result1 = TestClient.start_link(host: "localhost", port: 3000, path: "/")
+    assert elem(result1, 0) == :ok
+    result2 = TestClient.start_link(host: "localhost", port: 3000, path: "/")
+    assert elem(result2, 0) == :error
   end
 
 end

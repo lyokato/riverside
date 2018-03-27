@@ -4,9 +4,12 @@ defmodule Riverside.Test.TestServer do
               port    :: non_neg_integer,
               path    :: String.t) :: {:ok, pid}
   def start(handler, port, path) do
-    :cowboy.start_http(:http, 100,
-      [ {:port, port} ],
-      [ {:env, [ {:dispatch, dispatch(handler, path)} ] } ])
+    :cowboy.start_clear(:test_server,
+      [{:port, port}],
+      %{env: %{
+        dispatch: dispatch(handler, path)
+      } }
+    )
   end
 
   defp dispatch(handler, path) do
@@ -19,7 +22,7 @@ defmodule Riverside.Test.TestServer do
 
   @spec stop(pid) :: no_return
   def stop(pid) do
-    :cowboy.stop_listener(:http)
+    :cowboy.stop_listener(:test_server)
     Process.exit(pid, :shutdown)
   end
 end

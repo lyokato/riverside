@@ -2,44 +2,26 @@ use Mix.Config
 
 config :riverside, Example.Handler,
   authentication: {:basic, "exmaple.org"},
-  codec: Riverside.Codec.MessagePack,
-  connection_timeout: 60_000
+  codec: Riverside.Codec.MessagePack
 
 config :riverside,
   timestamp_module: Riverside.IO.Timestamp.Sandbox,
   random_module: Riverside.IO.Random.Sandbox
 
-config :riverside, TestHandler,
-  connection_timeout: 60_000
-
-config :riverside, TestEchoHandler,
-  connection_timeout: 60_000
-
 config :riverside, TestMaxConnectionHandler,
-  max_connections: 1,
-  connection_timeout: 60_000
-
-config :riverside, TestStatsHandler,
-  connection_timeout: 60_000
-
-config :riverside, TestAuthQueryHandler,
-  connection_timeout: 60_000
+  max_connections: 1
 
 config :riverside, TestAuthBasicHandler,
-  authentication: {:basic, "exmaple.org"},
-  connection_timeout: 60_000
+  authentication: {:basic, "exmaple.org"}
 
 config :riverside, TestAuthBearerTokenHandler,
-  authentication: {:bearer_token, "exmaple.org"},
-  connection_timeout: 60_000
+  authentication: {:bearer_token, "exmaple.org"}
 
 config :riverside, TestDirectRelayHandler,
-  authentication: {:bearer_token, "exmaple.org"},
-  connection_timeout: 60_000
+  authentication: {:bearer_token, "exmaple.org"}
 
 config :riverside, TestChannelBroadcastHandler,
-  authentication: {:bearer_token, "exmaple.org"},
-  connection_timeout: 60_000
+  authentication: {:bearer_token, "exmaple.org"}
 
 config :logger,
   level: :debug,
