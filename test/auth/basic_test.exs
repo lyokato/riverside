@@ -62,13 +62,13 @@ defmodule Riverside.Auth.BasicTest do
 
   test "authenticate with bad username" do
     {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Basic" <> build_token("invalid", "foobar")}])
+                                                 [{:authorization, "Basic " <> build_token("invalid", "foobar")}])
     assert code == 401
   end
 
   test "authenticate with bad password" do
     {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Basic" <> build_token("valid_example", "invalid")}])
+                                                 [{:authorization, "Basic " <> build_token("valid_example", "invalid")}])
     assert code == 401
   end
 

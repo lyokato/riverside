@@ -8,7 +8,7 @@ Simple WebSocket Server Framework for Elixir
 
 ```elixir
 def deps do
-  [{:riverside, github: "lyokato/riverside", tag: "0.2.2"}]
+  [{:riverside, github: "lyokato/riverside", tag: "0.3.0"}]
 end
 ```
 
@@ -19,7 +19,6 @@ end
 config :my_app, MyApp.Handler,
   authentication: {:basic, "example.org"},
   codec: Riverside.Codec.JSON,
-  connection_timeout: 120_000,
   max_connections: 10_000,
   transmission_limit: [duration: 2_000, capacity: 50]
 ```
