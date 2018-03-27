@@ -40,7 +40,7 @@ defmodule Riverside.Connection do
 
       Logger.warn "<Riverside.Connection> connection number is over limit"
 
-      {:ok, req, nil}
+      {:ok, req, :unset}
 
     else
 
@@ -52,7 +52,7 @@ defmodule Riverside.Connection do
 
         {:error, reason, req2} ->
           Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
-          {:ok, req2, nil}
+          {:ok, req2, :unset}
 
       end
 
@@ -196,6 +196,10 @@ defmodule Riverside.Connection do
 
   end
 
+  def terminate(reason, _req, :unset) do
+    Logger.info "<Riverside> @terminate: #{inspect reason}"
+    :ok
+  end
   def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
     Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
