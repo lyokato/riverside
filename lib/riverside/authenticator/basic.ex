@@ -2,8 +2,6 @@ defmodule Riverside.Authenticator.Basic do
 
   @behaviour Riverside.Authenticator.Behaviour
 
-  require Logger
-
   alias Riverside.Util.CowboyUtil
 
   def authenticate(req, opts, f) do

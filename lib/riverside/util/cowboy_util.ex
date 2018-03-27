@@ -1,7 +1,5 @@
 defmodule Riverside.Util.CowboyUtil do
 
-  require Logger
-
   @spec queries(:cowboy_req.req) :: map
 
   def queries(req) do
