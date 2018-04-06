@@ -8,6 +8,7 @@ defmodule Riverside.Connection do
   alias Riverside.PeerAddress
   alias Riverside.Session
   alias Riverside.Stats
+  alias Riverside.Util.CowboyUtil
 
   @type shutdown_reason :: :too_many_messages
 
@@ -29,32 +30,45 @@ defmodule Riverside.Connection do
   end
 
   def init(req, opts) do
+    try do
 
-    peer = PeerAddress.gather(req)
+      peer = PeerAddress.gather(req)
 
-    Logger.debug "<Riverside.Connection> incoming new request: #{peer}"
+      Logger.debug "<Riverside.Connection> incoming new request: #{peer}"
 
-    handler = Keyword.fetch!(opts, :handler)
+      handler = Keyword.fetch!(opts, :handler)
 
-    if Stats.number_of_current_connections() >= handler.__max_connections__() do
+      if Stats.number_of_current_connections() >= handler.__max_connections__() do
 
-      Logger.warn "<Riverside.Connection> connection number is over limit"
+        Logger.warn "<Riverside.Connection> connection number is over limit"
 
-      {:ok, req, :unset}
+        {:ok, req, :unset}
 
-    else
+      else
 
-      case handler.__handle_authentication__(req, peer) do
+        case handler.__handle_authentication__(req, peer) do
 
-        {:ok, user_id, handler_state} ->
-          state = new(handler, user_id, peer, handler_state)
-          {:cowboy_websocket, req, state}
+          {:ok, user_id, handler_state} ->
+            state = new(handler, user_id, peer, handler_state)
+            {:cowboy_websocket, req, state}
 
-        {:error, reason, req2} ->
-          Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
-          {:ok, req2, :unset}
+          {:error, reason, req2} ->
+            Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
+            {:ok, req2, :unset}
+
+        end
 
       end
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> init error: #{errmsg}"
+        {:ok, CowboyUtil.response_with_code(req, 500), :unset}
 
     end
 
@@ -62,43 +76,70 @@ defmodule Riverside.Connection do
 
   def websocket_init(state) do
 
-    Logger.debug "<Riverside.#{state.session}> @init"
+    try do
 
-    if Stats.number_of_current_connections() >= state.handler.__max_connections__() do
+      Logger.debug "<Riverside.#{state.session}> @init"
 
-      Logger.warn "<Riverside.Connection> connection number is over limit"
+      if Stats.number_of_current_connections() >= state.handler.__max_connections__() do
 
-      {:stop, state}
+        Logger.warn "<Riverside.Connection> connection number is over limit"
 
-    else
+        {:stop, state}
 
-      Process.flag(:trap_exit, true)
+      else
 
-      send self(), :post_init
+        Process.flag(:trap_exit, true)
 
-      Stats.countup_connections()
+        send self(), :post_init
 
-      LocalDelivery.register(state.session.user_id, state.session.id)
+        Stats.countup_connections()
 
-      {:ok, state}
+        LocalDelivery.register(state.session.user_id, state.session.id)
+
+        {:ok, state}
+
+      end
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}"
+        {:stop, state}
 
     end
-
 
   end
 
   def websocket_info(:post_init, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @post_init"
+    try do
 
-    case state.handler.init(state.session, state.handler_state) do
+      Logger.debug "<Riverside.#{state.session}> @post_init"
 
-      {:ok, session2, handler_state2} ->
-        state2 = %{state| session: session2, handler_state: handler_state2}
-        {:ok, state2, :hibernate}
+      case state.handler.init(state.session, state.handler_state) do
 
-      {:error, reason} ->
-        Logger.info "<Riverside.#{state.session}> failed to initialize: #{inspect reason}"
+        {:ok, session2, handler_state2} ->
+          state2 = %{state| session: session2, handler_state: handler_state2}
+          {:ok, state2, :hibernate}
+
+        {:error, reason} ->
+          Logger.info "<Riverside.#{state.session}> failed to initialize: #{inspect reason}"
+          {:stop, state}
+
+      end
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}"
         {:stop, state}
 
     end
@@ -123,19 +164,33 @@ defmodule Riverside.Connection do
 
   def websocket_info({:EXIT, pid, reason}, %{session: session}=state) do
 
-    Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
+    try do
 
-    if Session.should_delegate_exit?(session, pid) do
+      Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
 
-      session2 = Session.forget_to_trap_exit(session, pid)
+      if Session.should_delegate_exit?(session, pid) do
 
-      state2 = %{state| session: session2}
+        session2 = Session.forget_to_trap_exit(session, pid)
 
-      handler_info({:EXIT, pid, reason}, state2)
+        state2 = %{state| session: session2}
 
-    else
+        handler_info({:EXIT, pid, reason}, state2)
 
-      {:stop, state}
+      else
+
+        {:stop, state}
+
+      end
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}"
+        {:stop, state}
 
     end
 
@@ -143,9 +198,23 @@ defmodule Riverside.Connection do
 
   def websocket_info(event, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
+    try do
 
-    handler_info(event, state)
+      Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
+
+      handler_info(event, state)
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}"
+        {:stop, state}
+
+    end
 
   end
 
@@ -166,25 +235,67 @@ defmodule Riverside.Connection do
 
   def websocket_handle({:ping, data}, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @ping"
+    try do
 
-    handle_frame(:ping, data, state)
+      Logger.debug "<Riverside.#{state.session}> @ping"
+
+      handle_frame(:ping, data, state)
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
+        {:stop, state}
+
+    end
 
   end
 
   def websocket_handle({:binary, data}, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @binary"
+    try do
 
-    handle_frame(:binary, data, state)
+      Logger.debug "<Riverside.#{state.session}> @binary"
+
+      handle_frame(:binary, data, state)
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
+        {:stop, state}
+
+    end
 
   end
 
   def websocket_handle({:text, data}, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @text"
+    try do
 
-    handle_frame(:text, data, state)
+      Logger.debug "<Riverside.#{state.session}> @text"
+
+      handle_frame(:text, data, state)
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
+        {:stop, state}
+
+    end
 
   end
 
@@ -202,21 +313,50 @@ defmodule Riverside.Connection do
   end
   def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
-    Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+    try do
 
-    state.handler.terminate(reason, state.session, state.handler_state)
+      Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
-    Stats.countdown_connections()
+      state.handler.terminate(reason, state.session, state.handler_state)
 
-    :ok
+      Stats.countdown_connections()
+
+      :ok
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> terminate error: #{errmsg}"
+        :ok
+
+    end
+
   end
   def terminate(reason, _req, state) do
 
-    Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+    try do
 
-    state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
+      Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
-    Stats.countdown_connections()
+      state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
+
+      Stats.countdown_connections()
+
+    catch
+
+      error_type, _value when
+        error_type in [:error, :throw, :exit] ->
+
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> terminate error: #{errmsg}"
+        :ok
+
+    end
 
     :ok
   end
