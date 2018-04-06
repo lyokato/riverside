@@ -8,7 +8,7 @@ Simple WebSocket Server Framework for Elixir
 
 ```elixir
 def deps do
-  [{:riverside, github: "lyokato/riverside", tag: "0.3.1"}]
+  [{:riverside, github: "lyokato/riverside", tag: "0.3.3"}]
 end
 ```
 
