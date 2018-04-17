@@ -3,6 +3,7 @@ defmodule TestAuthBearerTokenHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
+  @impl Riverside.Behaviour
   def authenticate({:bearer_token, token}, _params, _header, _peer) do
     if token == "valid_example" do
       {:ok, 1, %{}}
@@ -11,6 +12,7 @@ defmodule TestAuthBearerTokenHandler do
     end
   end
 
+  @impl Riverside.Behaviour
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}
