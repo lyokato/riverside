@@ -233,13 +233,13 @@ defmodule Riverside.Connection do
 
   end
 
-  def websocket_handle({:ping, data}, state) do
+  def websocket_handle(:ping, state) do
 
     try do
 
       Logger.debug "<Riverside.#{state.session}> @ping"
 
-      handle_frame(:ping, data, state)
+      handle_frame(:ping, nil, state)
 
     catch
 
