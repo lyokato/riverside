@@ -4,7 +4,7 @@ defmodule TestStatsHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate(_cred, _params, _header, _peer) do
+  def authenticate(_req) do
     {:ok, 1, %{}}
   end
 

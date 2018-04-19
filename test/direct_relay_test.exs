@@ -4,11 +4,14 @@ defmodule TestDirectRelayHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate({:bearer_token, token}, _params, _header, _peer) do
-    case token do
-      "foo" -> {:ok, token, %{}}
-      "bar" -> {:ok, token, %{}}
-      _     -> {:error, :invalid_token}
+  def authenticate(req) do
+    case Riverside.AuthRequest.bearer(req) do
+      "foo" -> {:ok, 1, %{}}
+      "bar" -> {:ok, 1, %{}}
+      _     ->
+        error = auth_error_with_code(401)
+              |> put_auth_error_bearer_header("example.org", "invalid_token")
+        {:error, error}
     end
   end
 

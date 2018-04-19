@@ -4,8 +4,7 @@ defmodule Riverside do
   Handler specification for your WebSocket service.
   """
 
-  alias Riverside.Authenticator
-  alias Riverside.PeerAddress
+  alias Riverside.AuthRequest
   alias Riverside.Session
 
   defmodule Behaviour do
@@ -15,9 +14,10 @@ defmodule Riverside do
                             | {:remote, :cowboy_websocket.close_code, binary}
                             | {:error, :badencoding | :badframe | :closed | :too_many_massages | atom}
 
-    @callback __handle_authentication__(req  :: :cowboy_req.req,
-                                        peer :: PeerAddress.t)
-      :: Authenticator.auth_result
+    @callback __handle_authentication__(req :: AuthRequest.t)
+      :: {:ok, Session.user_id, any}
+       | {:ok, Session.user_id, Session.session_id, any}
+       | {:error, Riverside.AuthError.t}
 
     @callback __max_connections__() :: non_neg_integer
 
@@ -30,11 +30,10 @@ defmodule Riverside do
       :: {:ok, Session.t}
        | {:error, :invalid_message | :unsupported }
 
-    @callback authenticate(cred_type :: Authenticator.cred_type,
-                           params    :: map,
-                           headers   :: map,
-                           peer      :: PeerAddress.t)
-      :: Authenticator.callback_result
+    @callback authenticate(req :: AuthRequest.t)
+      :: {:ok, Session.user_id, any}
+      :: {:ok, Session.user_id, Session.session_id, any}
+       | {:error, Riverside.AuthError.t}
 
     @callback init(session :: Session.t, state :: any)
       :: {:ok, Session.t, any}
@@ -66,7 +65,6 @@ defmodule Riverside do
 
       config = Riverside.Config.load(__MODULE__, opts)
 
-      @auth_type       Keyword.get(config, :authentication, :default)
       @max_connections Keyword.get(config, :max_connections, 65536)
       @codec           Keyword.get(config, :codec, Riverside.Codec.JSON)
 
@@ -75,6 +73,13 @@ defmodule Riverside do
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
         leave_channel: 1
+      ]
+
+      import Riverside.AuthError, only: [
+        auth_error_with_code: 1,
+        put_auth_error_header: 3,
+        put_auth_error_basic_header: 2,
+        put_auth_error_bearer_header: 3,
       ]
 
       import Riverside.Session, only: [trap_exit: 2]
@@ -86,45 +91,9 @@ defmodule Riverside do
       def __max_connections__, do: @max_connections
 
       @impl Riverside.Behaviour
-      def __handle_authentication__(req, peer) do
-
-        params  = Riverside.Util.CowboyUtil.queries(req)
-        headers = Riverside.Util.CowboyUtil.headers(req)
-
-        __start_authentication__(@auth_type, params, headers, peer, req)
-
-      end
-
-      defp __start_authentication__(:default, params, headers, peer, req) do
-
-        Logger.debug "<Riverside.Connection> Default Authentication"
-
-        Riverside.Authenticator.Default.authenticate(req, [],
-          &(authenticate(&1, params, headers, peer)))
-      end
-
-      defp __start_authentication__({:bearer_token, realm}, params, headers, peer, req) do
-
-        Logger.debug "<Riverside.Connection> BearerToken Authentication"
-
-        Riverside.Authenticator.BearerToken.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, headers, peer)))
-      end
-
-      defp __start_authentication__({:basic, realm}, params, headers, peer, req) do
-
-        Logger.debug "<Riverside.Connection> Basic Authentication"
-
-        Riverside.Authenticator.Basic.authenticate(req, [realm: realm],
-          &(authenticate(&1, params, headers, peer)))
-      end
-
-      defp __start_authentication__(cred, _params, _headers, peer, req) do
-
-        Logger.warn "<Riverside.Connection> Unsupported authentication credential: #{inspect cred}"
-
-        {:error, :invalid_request, req}
-
+      def __handle_authentication__(req) do
+        Logger.debug "<Riverside.Connection> Authentication"
+        authenticate(req)
       end
 
       @impl Riverside.Behaviour
@@ -173,14 +142,14 @@ defmodule Riverside do
         end
       end
 
-      @spec deliver_user(user_id :: Riverside.Session.user_id,
+      @spec deliver_user(user_id :: Session.user_id,
                          data    :: any) :: :ok | :error
 
       def deliver_user(user_id, data) do
         deliver({:user, user_id}, data)
       end
 
-      @spec deliver_session(user_id    :: Riverside.Session.user_id,
+      @spec deliver_session(user_id    :: Session.user_id,
                             session_id :: String.t,
                             data       :: any) :: :ok | :error
       def deliver_session(user_id, session_id, data) do
@@ -219,8 +188,10 @@ defmodule Riverside do
       def close(), do: send(self(), :stop)
 
       @impl Riverside.Behaviour
-      def authenticate(_cred, _queries, _headers, _peer) do
-        {:ok, Riverside.IO.Random.bigint(), %{}}
+      def authenticate(req) do
+        user_id    = Riverside.IO.Random.bigint()
+        session_id = Riverside.IO.Random.hex(20)
+        {:ok, user_id, session_id, %{}}
       end
 
       @impl Riverside.Behaviour
@@ -236,7 +207,7 @@ defmodule Riverside do
       def terminate(_reason, _session, _state), do: :ok
 
       defoverridable [
-        authenticate: 4,
+        authenticate: 1,
         init: 2,
         handle_info: 3,
         handle_message: 3,

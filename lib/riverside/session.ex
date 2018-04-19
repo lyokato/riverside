@@ -1,12 +1,12 @@
 defmodule Riverside.Session do
 
   @abbreviation_header "Session"
-  @session_id_length 20
 
   alias Riverside.IO.Random
   alias Riverside.Session.TransmissionLimitter
 
   @type user_id :: non_neg_integer | String.t
+  @type session_id :: String.t
 
   @type t :: %__MODULE__{user_id: user_id,
                          id: String.t,
@@ -22,10 +22,9 @@ defmodule Riverside.Session do
             peer: nil,
             trapping_pids: nil
 
-  @spec new(user_id, Riverside.PeerAddress.t) :: t
-  def new(user_id, peer) do
+  @spec new(user_id, session_id, Riverside.PeerAddress.t) :: t
+  def new(user_id, session_id, peer) do
 
-    session_id = create_session_id()
     abbreviation = create_abbreviation(user_id, session_id)
 
     %__MODULE__{user_id: user_id,
@@ -34,10 +33,6 @@ defmodule Riverside.Session do
                 transmission_limitter: TransmissionLimitter.new(),
                 trapping_pids: MapSet.new(),
                 peer: peer}
-  end
-
-  defp create_session_id() do
-    Random.hex(@session_id_length)
   end
 
   defp create_abbreviation(user_id, session_id) do

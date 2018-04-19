@@ -4,11 +4,14 @@ defmodule TestAuthBearerTokenHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate({:bearer_token, token}, _params, _header, _peer) do
+  def authenticate(req) do
+    token = Riverside.AuthRequest.bearer(req)
     if token == "valid_example" do
       {:ok, 1, %{}}
     else
-      {:error, :invalid_token}
+      error = auth_error_with_code(401)
+            |> put_auth_error_basic_header("example.org")
+      {:error, error}
     end
   end
 

@@ -4,11 +4,14 @@ defmodule TestAuthBasicHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate({:basic, username, password}, _params, _header, _peer) do
+  def authenticate(req) do
+    {username, password} = Riverside.AuthRequest.basic(req)
     if username == "valid_example" and password == "foobar" do
       {:ok, username, %{}}
     else
-      {:error, :invalid_request}
+      error = auth_error_with_code(401)
+            |> put_auth_error_basic_header("example.org")
+      {:error, error}
     end
   end
 
