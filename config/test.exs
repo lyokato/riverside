@@ -19,6 +19,6 @@ config :riverside, TestDirectRelayHandler, []
 config :riverside, TestChannelBroadcastHandler, []
 
 config :logger,
-  level: :debug,
+  level: :warn,
   truncate: 4096
 

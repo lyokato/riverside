@@ -30,7 +30,10 @@ defmodule Riverside.Connection do
   end
 
   def init(req, opts) do
-    try do
+
+    guard("init",
+          fn -> {:ok, CowboyUtil.response(req, 500, %{})} end,
+          fn ->
 
       peer = PeerAddress.gather(req)
 
@@ -70,28 +73,15 @@ defmodule Riverside.Connection do
 
       end
 
-    rescue
-      err ->
-        Logger.error "<Riverside.Connection> init error: #{inspect err}"
-        {:ok, CowboyUtil.response(req, 500, %{}), :unset}
-
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> init error: #{errmsg}, #{inspect value}"
-        {:ok, CowboyUtil.response(req, 500, %{}), :unset}
-
-    end
+    end)
 
   end
 
   def websocket_init(state) do
 
-    try do
+    guard("websocket_init",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @init"
 
@@ -115,23 +105,15 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}, #{inspect value}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_info(:post_init, state) do
 
-    try do
+    guard("websocket_info",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @post_init"
 
@@ -147,17 +129,7 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}, #{inspect value}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
@@ -179,7 +151,9 @@ defmodule Riverside.Connection do
 
   def websocket_info({:EXIT, pid, reason}, %{session: session}=state) do
 
-    try do
+    guard("websocket_info",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
 
@@ -197,39 +171,21 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}, #{inspect value}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_info(event, state) do
 
-    try do
+    guard("websocket_info",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
 
       handler_info(event, state)
 
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}, #{inspect value}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
@@ -250,67 +206,43 @@ defmodule Riverside.Connection do
 
   def websocket_handle(:ping, state) do
 
-    try do
+    guard("websocket_handle",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @ping"
 
       handle_frame(:ping, nil, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_handle({:binary, data}, state) do
 
-    try do
+    guard("websocket_handle",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @binary"
 
       handle_frame(:binary, data, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_handle({:text, data}, state) do
 
-    try do
+    guard("websocket_handle",
+          fn -> {:stop, state} end,
+          fn ->
 
       Logger.debug "<Riverside.#{state.session}> @text"
 
       handle_frame(:text, data, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
@@ -328,7 +260,9 @@ defmodule Riverside.Connection do
   end
   def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
-    try do
+    guard("terminate",
+          fn -> :ok end,
+          fn ->
 
       Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
@@ -338,28 +272,14 @@ defmodule Riverside.Connection do
 
       :ok
 
-    rescue
-
-      err ->
-        Logger.error "<Riverside.Connection> terminate error: #{inspect err}"
-        :ok
-
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> terminate error: #{errmsg}, #{inspect value}"
-        :ok
-
-    end
+    end)
 
   end
   def terminate(reason, _req, state) do
 
-    try do
+    guard("terminate",
+          fn -> :ok end,
+          fn ->
 
       Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
 
@@ -367,25 +287,10 @@ defmodule Riverside.Connection do
 
       Stats.countdown_connections()
 
-    rescue
+      :ok
 
-      err ->
-        Logger.error "<Riverside.Connection> terminate error: #{inspect err}"
-        :ok
+    end)
 
-    catch
-
-      error_type, value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> terminate error: #{errmsg}, #{inspect value}"
-        :ok
-
-    end
-
-    :ok
   end
 
   defp handle_frame(type, data, %{handler: handler, session: session}=state) do
@@ -424,6 +329,23 @@ defmodule Riverside.Connection do
   end
   defp handle_data(:ping, _data, state) do
     {:ok, state.session, state.handler_state}
+  end
+
+  defp guard(caller, error_resp, func) do
+    try do
+      func.()
+    rescue
+      err ->
+        Logger.error "<Riverside.Connection> #{caller} error: #{inspect err}"
+        error_resp.()
+    catch
+      error_type, value when
+        error_type in [:error, :throw, :exit] ->
+        errmsg = System.stacktrace()
+               |> Exception.format_stacktrace()
+        Logger.error "<Riverside.Connection> #{caller} error: #{errmsg}, #{inspect value}"
+        error_resp.()
+    end
   end
 
 end
