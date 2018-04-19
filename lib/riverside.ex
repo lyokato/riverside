@@ -20,6 +20,7 @@ defmodule Riverside do
        | {:error, Riverside.AuthError.t}
 
     @callback __max_connections__() :: non_neg_integer
+    @callback __show_debug_logs__() :: boolean
 
     @callback __transmission_limit__() :: keyword
 
@@ -56,7 +57,7 @@ defmodule Riverside do
 
   end
 
-  defmacro __using__(opts) do
+  defmacro __using__(opts \\ []) do
     quote location: :keep, bind_quoted: [opts: opts] do
 
       require Logger
@@ -67,6 +68,7 @@ defmodule Riverside do
 
       @max_connections Keyword.get(config, :max_connections, 65536)
       @codec           Keyword.get(config, :codec, Riverside.Codec.JSON)
+      @show_debug_logs Keyword.get(config, :show_debug_logs, false)
 
       @transmission_limit Riverside.Config.transmission_limit(config)
 
@@ -88,11 +90,13 @@ defmodule Riverside do
       def __transmission_limit__, do: @transmission_limit
 
       @impl Riverside.Behaviour
+      def __show_debug_logs__, do: @show_debug_logs
+
+      @impl Riverside.Behaviour
       def __max_connections__, do: @max_connections
 
       @impl Riverside.Behaviour
       def __handle_authentication__(req) do
-        Logger.debug "<Riverside.Connection> Authentication"
         authenticate(req)
       end
 
@@ -113,7 +117,9 @@ defmodule Riverside do
 
         else
 
-          Logger.info "<Riverside.#{session}> unsupported frame type: #{frame_type}"
+          if @show_debug_logs do
+            Logger.debug "<Riverside.#{session}> unsupported frame type: #{frame_type}"
+          end
 
           {:error, :unsupported}
 

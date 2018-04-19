@@ -10,15 +10,15 @@ config :riverside,
 config :riverside, TestMaxConnectionHandler,
   max_connections: 1
 
-config :riverside, TestAuthBasicHandler, []
+#config :riverside, TestAuthBasicHandler, []
 
-config :riverside, TestAuthBearerTokenHandler, []
+#config :riverside, TestAuthBearerTokenHandler, []
 
-config :riverside, TestDirectRelayHandler, []
+#config :riverside, TestDirectRelayHandler, []
 
-config :riverside, TestChannelBroadcastHandler, []
+#config :riverside, TestChannelBroadcastHandler, []
 
 config :logger,
-  level: :warn,
+  level: :debug,
   truncate: 4096
 
