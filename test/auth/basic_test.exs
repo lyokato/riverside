@@ -5,7 +5,7 @@ defmodule TestAuthBasicHandler do
 
   @impl Riverside.Behaviour
   def authenticate(req) do
-    {username, password} = Riverside.AuthRequest.basic(req)
+    {username, password} = req.basic
     if username == "valid_example" and password == "foobar" do
       {:ok, username, %{}}
     else

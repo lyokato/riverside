@@ -5,8 +5,7 @@ defmodule TestAuthBearerTokenHandler do
 
   @impl Riverside.Behaviour
   def authenticate(req) do
-    token = Riverside.AuthRequest.bearer(req)
-    if token == "valid_example" do
+    if req.bearer_token == "valid_example" do
       {:ok, 1, %{}}
     else
       error = auth_error_with_code(401)

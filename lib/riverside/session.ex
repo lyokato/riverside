@@ -2,7 +2,6 @@ defmodule Riverside.Session do
 
   @abbreviation_header "Session"
 
-  alias Riverside.IO.Random
   alias Riverside.Session.TransmissionLimitter
 
   @type user_id :: non_neg_integer | String.t

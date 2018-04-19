@@ -8,7 +8,7 @@ defmodule TestChannelBroadcastHandler do
 
     channel = req.queries["channel"]
 
-    case Riverside.AuthRequest.bearer(req) do
+    case req.bearer_token do
       "foo" -> {:ok, 1, %{channel: channel}}
       "bar" -> {:ok, 2, %{channel: channel}}
       "buz" -> {:ok, 3, %{channel: channel}}

@@ -5,7 +5,7 @@ defmodule TestDirectRelayHandler do
 
   @impl Riverside.Behaviour
   def authenticate(req) do
-    case Riverside.AuthRequest.bearer(req) do
+    case req.bearer_token do
       "foo" -> {:ok, 1, %{}}
       "bar" -> {:ok, 1, %{}}
       _     ->
