@@ -3,6 +3,7 @@ defmodule TestAuthBasicHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
+  @impl Riverside.Behaviour
   def authenticate({:basic, username, password}, _params, _header, _peer) do
     if username == "valid_example" and password == "foobar" do
       {:ok, username, %{}}
@@ -11,6 +12,7 @@ defmodule TestAuthBasicHandler do
     end
   end
 
+  @impl Riverside.Behaviour
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}
