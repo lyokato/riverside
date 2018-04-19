@@ -3,6 +3,7 @@ defmodule TestAuthQueryHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
+  @impl Riverside.Behaviour
   def authenticate(:default, params, _header, _peer) do
     if Map.has_key?(params, :user) do
       username = Map.fetch!(params, :user)
@@ -16,6 +17,7 @@ defmodule TestAuthQueryHandler do
     end
   end
 
+  @impl Riverside.Behaviour
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}

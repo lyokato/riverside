@@ -79,13 +79,13 @@ defmodule Riverside do
 
       import Riverside.Session, only: [trap_exit: 2]
 
-      @impl true
+      @impl Riverside.Behaviour
       def __transmission_limit__, do: @transmission_limit
 
-      @impl true
+      @impl Riverside.Behaviour
       def __max_connections__, do: @max_connections
 
-      @impl true
+      @impl Riverside.Behaviour
       def __handle_authentication__(req, peer) do
 
         params  = Riverside.Util.CowboyUtil.queries(req)
@@ -127,7 +127,7 @@ defmodule Riverside do
 
       end
 
-      @impl true
+      @impl Riverside.Behaviour
       def __handle_data__(frame_type, data, session, state) do
 
         if @codec.frame_type === frame_type do
@@ -218,21 +218,21 @@ defmodule Riverside do
       @spec close() :: no_return
       def close(), do: send(self(), :stop)
 
-      @impl true
+      @impl Riverside.Behaviour
       def authenticate(_cred, _queries, _headers, _peer) do
         {:ok, Riverside.IO.Random.bigint(), %{}}
       end
 
-      @impl true
+      @impl Riverside.Behaviour
       def init(session, state), do: {:ok, session, state}
 
-      @impl true
+      @impl Riverside.Behaviour
       def handle_info(event, session, state), do: {:ok, session, state}
 
-      @impl true
+      @impl Riverside.Behaviour
       def handle_message(_msg, session, state), do: {:ok, session, state}
 
-      @impl true
+      @impl Riverside.Behaviour
       def terminate(_reason, _session, _state), do: :ok
 
       defoverridable [

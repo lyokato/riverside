@@ -3,10 +3,12 @@ defmodule TestEchoHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
+  @impl Riverside.Behaviour
   def authenticate(_cred, _params, _header, _peer) do
     {:ok, 1, %{}}
   end
 
+  @impl Riverside.Behaviour
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}
