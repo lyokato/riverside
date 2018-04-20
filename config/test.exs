@@ -1,7 +1,6 @@
 use Mix.Config
 
 config :riverside, Example.Handler,
-  authentication: {:basic, "exmaple.org"},
   codec: Riverside.Codec.MessagePack
 
 config :riverside,
@@ -11,17 +10,13 @@ config :riverside,
 config :riverside, TestMaxConnectionHandler,
   max_connections: 1
 
-config :riverside, TestAuthBasicHandler,
-  authentication: {:basic, "exmaple.org"}
+#config :riverside, TestAuthBasicHandler, []
 
-config :riverside, TestAuthBearerTokenHandler,
-  authentication: {:bearer_token, "exmaple.org"}
+#config :riverside, TestAuthBearerTokenHandler, []
 
-config :riverside, TestDirectRelayHandler,
-  authentication: {:bearer_token, "exmaple.org"}
+#config :riverside, TestDirectRelayHandler, []
 
-config :riverside, TestChannelBroadcastHandler,
-  authentication: {:bearer_token, "exmaple.org"}
+#config :riverside, TestChannelBroadcastHandler, []
 
 config :logger,
   level: :debug,

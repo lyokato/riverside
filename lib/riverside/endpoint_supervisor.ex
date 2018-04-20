@@ -7,17 +7,18 @@ defmodule Riverside.EndpointSupervisor do
   @default_path "/"
   @default_timeout 60_000
 
-  def start_link([handler, opts]) do
-    Supervisor.start_link(__MODULE__, [handler, opts], name: __MODULE__)
+  def start_link(opts) do
+    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init([handler, opts]) do
-    children(handler, opts)
+  def init(opts) do
+    children(opts)
     |> Supervisor.init(strategy: :one_for_one)
   end
 
-  def children(handler, opts) do
+  def children(opts) do
 
+    handler = Keyword.fetch!(opts, :handler)
     router = Keyword.get(opts, :router, Riverside.Router)
 
     [{
