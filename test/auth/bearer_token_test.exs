@@ -9,7 +9,7 @@ defmodule TestAuthBearerTokenHandler do
       {:ok, 1, %{}}
     else
       error = auth_error_with_code(401)
-            |> put_auth_error_basic_header("example.org")
+            |> put_auth_error_bearer_header("example.org")
       {:error, error}
     end
   end

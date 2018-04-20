@@ -81,6 +81,7 @@ defmodule Riverside do
         auth_error_with_code: 1,
         put_auth_error_header: 3,
         put_auth_error_basic_header: 2,
+        put_auth_error_bearer_header: 2,
         put_auth_error_bearer_header: 3,
       ]
 
