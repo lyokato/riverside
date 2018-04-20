@@ -6,15 +6,15 @@ defmodule Riverside.Supervisor do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  def init([handler, opts]) do
-    children(handler, opts)
+  def init(opts) do
+    children(opts)
     |> Supervisor.init(strategy: :one_for_one)
   end
 
-  defp children(handler, opts) do
+  defp children(opts) do
     [
       Riverside.Stats,
-      {Riverside.EndpointSupervisor, [handler, opts]},
+      {Riverside.EndpointSupervisor, opts},
       {TheEnd.AcceptanceStopper, [
         timeout:  0,
         endpoint: Riverside.Supervisor,

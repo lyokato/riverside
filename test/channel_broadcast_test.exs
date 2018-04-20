@@ -4,15 +4,18 @@ defmodule TestChannelBroadcastHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate({:bearer_token, token}, params, _header, _peer) do
+  def authenticate(req) do
 
-    channel = Map.fetch!(params, :channel)
+    channel = req.queries["channel"]
 
-    case token do
-      "foo" -> {:ok, token, %{channel: channel}}
-      "bar" -> {:ok, token, %{channel: channel}}
-      "buz" -> {:ok, token, %{channel: channel}}
-      _     -> {:error, :invalid_token}
+    case req.bearer_token do
+      "foo" -> {:ok, 1, %{channel: channel}}
+      "bar" -> {:ok, 2, %{channel: channel}}
+      "buz" -> {:ok, 3, %{channel: channel}}
+      _     ->
+        error = auth_error_with_code(401)
+              |> put_auth_error_bearer_header("example.org", "invalid_token")
+        {:error, error}
     end
   end
 

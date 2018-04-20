@@ -2,8 +2,6 @@ defmodule Riverside.Codec.MessagePack do
 
   @behaviour Riverside.Codec
 
-  require Logger
-
   @impl true
   def frame_type do
     :binary
@@ -16,8 +14,7 @@ defmodule Riverside.Codec.MessagePack do
       {:ok, value} ->
         {:ok, value}
 
-      {:error, exception} ->
-        Logger.debug "<Riverside.Codec.MessagePack> failed to encode: #{inspect exception}"
+      {:error, _exception} ->
         {:error, :invalid_message}
 
     end
@@ -30,8 +27,7 @@ defmodule Riverside.Codec.MessagePack do
         {:ok, value} ->
           {:ok, value}
 
-        {:error, exception} ->
-          Logger.debug "<Riverside.Codec.MessagePack> failed to decode: #{inspect exception}"
+        {:error, _exception} ->
           {:error, :invalid_message}
 
       end

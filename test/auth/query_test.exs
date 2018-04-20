@@ -4,16 +4,18 @@ defmodule TestAuthQueryHandler do
   use Riverside, otp_app: :riverside
 
   @impl Riverside.Behaviour
-  def authenticate(:default, params, _header, _peer) do
-    if Map.has_key?(params, :user) do
-      username = Map.fetch!(params, :user)
+  def authenticate(req) do
+    if req.queries["user"] != nil do
+      username = req.queries["user"]
       if username == "valid_example" do
         {:ok, username, %{}}
       else
-        {:error, :invalid_request}
+        error = auth_error_with_code(400)
+        {:error, error}
       end
     else
-      {:error, :invalid_request}
+      error = auth_error_with_code(400)
+      {:error, error}
     end
   end
 

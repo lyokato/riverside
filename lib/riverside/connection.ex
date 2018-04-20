@@ -9,6 +9,7 @@ defmodule Riverside.Connection do
   alias Riverside.Session
   alias Riverside.Stats
   alias Riverside.Util.CowboyUtil
+  alias Riverside.ExceptionGuard
 
   @type shutdown_reason :: :too_many_messages
 
@@ -22,63 +23,76 @@ defmodule Riverside.Connection do
             shutdown_reason: nil,
             handler_state:   nil
 
-  def new(handler, user_id, peer, handler_state) do
+  def new(handler, user_id, session_id, peer, handler_state) do
     %__MODULE__{handler:         handler,
-                session:         Session.new(user_id, peer),
+                session:         Session.new(user_id, session_id, peer),
                 shutdown_reason: nil,
                 handler_state:   handler_state}
   end
 
   def init(req, opts) do
-    try do
+
+    ExceptionGuard.guard(
+      "<Riverside.Connection> init",
+      fn -> {:ok, CowboyUtil.response(req, 500, %{})} end,
+      fn ->
 
       peer = PeerAddress.gather(req)
 
-      Logger.debug "<Riverside.Connection> incoming new request: #{peer}"
-
       handler = Keyword.fetch!(opts, :handler)
+
+      if handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.Connection> incoming new request: #{peer}"
+      end
 
       if Stats.number_of_current_connections() >= handler.__max_connections__() do
 
         Logger.warn "<Riverside.Connection> connection number is over limit"
 
-        {:ok, req, :unset}
+        {:ok, req, {:unset, handler.__show_debug_logs__}}
 
       else
 
-        case handler.__handle_authentication__(req, peer) do
+        auth_req = Riverside.AuthRequest.new(req, peer)
+
+        case handler.__handle_authentication__(auth_req) do
 
           {:ok, user_id, handler_state} ->
-            state = new(handler, user_id, peer, handler_state)
+            session_id = Riverside.IO.Random.hex(20)
+            state = new(handler, user_id, session_id, peer, handler_state)
             {:cowboy_websocket, req, state}
 
-          {:error, reason, req2} ->
-            Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{reason}, shutdown"
-            {:ok, req2, :unset}
+          {:ok, user_id, session_id, handler_state} ->
+            state = new(handler, user_id, session_id, peer, handler_state)
+            {:cowboy_websocket, req, state}
+
+          {:error, %Riverside.AuthError{code: code, headers: headers}} ->
+            {:ok, CowboyUtil.response(req, code, headers), {:unset, handler.__show_debug_logs__}}
+
+          other ->
+            if handler.__show_debug_logs__ do
+              Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{inspect other}, shutdown"
+            end
+            {:ok, CowboyUtil.response(req, 500, %{}), {:unset, handler.__show_debug_logs__}}
 
         end
 
       end
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> init error: #{errmsg}"
-        {:ok, CowboyUtil.response_with_code(req, 500), :unset}
-
-    end
+    end)
 
   end
 
   def websocket_init(state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_init",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @init"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @init"
+      end
 
       if Stats.number_of_current_connections() >= state.handler.__max_connections__() do
 
@@ -100,25 +114,20 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_info(:post_init, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_info",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @post_init"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @post_init"
+      end
 
       case state.handler.init(state.session, state.handler_state) do
 
@@ -132,30 +141,24 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_init error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_info(:stop, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @stop"
+    if state.handler.__show_debug_logs__ do
+      Logger.debug "<Riverside.#{state.session}> @stop"
+    end
 
     {:stop, state}
   end
 
   def websocket_info({:deliver, type, msg}, state) do
 
-    Logger.debug "<Riverside.#{state.session}> @deliver"
+    if state.handler.__show_debug_logs__ do
+      Logger.debug "<Riverside.#{state.session}> @deliver"
+    end
 
     Stats.countup_outgoing_messages()
 
@@ -164,9 +167,14 @@ defmodule Riverside.Connection do
 
   def websocket_info({:EXIT, pid, reason}, %{session: session}=state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_info",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
+      end
 
       if Session.should_delegate_exit?(session, pid) do
 
@@ -182,39 +190,24 @@ defmodule Riverside.Connection do
 
       end
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_info(event, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_info",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
+      end
 
       handler_info(event, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_info error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
@@ -235,87 +228,81 @@ defmodule Riverside.Connection do
 
   def websocket_handle(:ping, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverrise.Connection> websocket_handle",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @ping"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @ping"
+      end
 
       handle_frame(:ping, nil, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_handle({:binary, data}, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_handle",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @binary"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @binary"
+      end
 
       handle_frame(:binary, data, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_handle({:text, data}, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> websocket_handle",
+      fn -> {:stop, state} end,
+      fn ->
 
-      Logger.debug "<Riverside.#{state.session}> @text"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @text"
+      end
 
       handle_frame(:text, data, state)
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> websocket_handle error: #{errmsg}"
-        {:stop, state}
-
-    end
+    end)
 
   end
 
   def websocket_handle(event, state) do
 
-    Logger.debug "<Riverside.#{state.session}> handle: unsupported event #{inspect event}"
+    if state.handler.__show_debug_logs__ do
+      Logger.debug "<Riverside.#{state.session}> handle: unsupported event #{inspect event}"
+    end
 
     {:ok, state}
 
   end
 
-  def terminate(reason, _req, :unset) do
-    Logger.info "<Riverside> @terminate: #{inspect reason}"
+  def terminate(reason, _req, {:unset, show_debug_logs}) do
+    if show_debug_logs do
+      Logger.debug "<Riverside> @terminate: #{inspect reason}"
+    end
     :ok
   end
   def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> terminate",
+      fn -> :ok end,
+      fn ->
 
-      Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+      end
 
       state.handler.terminate(reason, state.session, state.handler_state)
 
@@ -323,42 +310,28 @@ defmodule Riverside.Connection do
 
       :ok
 
-    catch
-
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
-
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> terminate error: #{errmsg}"
-        :ok
-
-    end
+    end)
 
   end
   def terminate(reason, _req, state) do
 
-    try do
+    ExceptionGuard.guard(
+      "<Riverside.Connection> terminate",
+      fn -> :ok end,
+      fn ->
 
-      Logger.info "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+      if state.handler.__show_debug_logs__ do
+        Logger.debug "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+      end
 
       state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
 
       Stats.countdown_connections()
 
-    catch
+      :ok
 
-      error_type, _value when
-        error_type in [:error, :throw, :exit] ->
+    end)
 
-        errmsg = System.stacktrace()
-               |> Exception.format_stacktrace()
-        Logger.error "<Riverside.Connection> terminate error: #{errmsg}"
-        :ok
-
-    end
-
-    :ok
   end
 
   defp handle_frame(type, data, %{handler: handler, session: session}=state) do
@@ -376,7 +349,9 @@ defmodule Riverside.Connection do
             {:ok, state3, :hibernate}
 
           {:error, reason} ->
-            Logger.info "<Riverside.#{session2}> failed to handle frame_type #{inspect type}: #{inspect reason}"
+            if state.handler.__show_debug_logs__ do
+              Logger.debug "<Riverside.#{session2}> failed to handle frame_type #{inspect type}: #{inspect reason}"
+            end
             {:ok, state2}
 
         end
