@@ -8,7 +8,7 @@ Simple WebSocket Server Framework for Elixir
 
 ```elixir
 def deps do
-  [{:riverside, github: "lyokato/riverside", tag: "0.4.0"}]
+  [{:riverside, github: "lyokato/riverside", tag: "0.4.1"}]
 end
 ```
 
@@ -17,7 +17,6 @@ end
 ```elixir
 
 config :my_app, MyApp.Handler,
-  authentication: {:basic, "example.org"},
   codec: Riverside.Codec.JSON,
   max_connections: 10_000,
   transmission_limit: [duration: 2_000, capacity: 50]
@@ -31,12 +30,17 @@ defmodule MyApp.Handler do
   use Riverside, otp_app: :my_app
 
   @impl true
-  def authenticate({:basic, username, password}, params, headers, peer) do
+  def authenticate(req) do
+
+    {username, password} = req.basic
 
     case MyApp.Authenticator.authenticate(username, password) do
-      {:ok, user_id}             -> {:ok, user_id, %{}}
-      {:error, :invalid_request} -> {:error, :invalid_request}
-      _other                     -> {:error, :server_error}
+
+      {:ok, user_id} -> {:ok, user_id, %{}}
+
+      {:error, reason} ->
+        error = auth_error_with_code(401)
+        {:error, error}
     end
 
   end
@@ -85,7 +89,7 @@ defmodule MyApp
 
     children = [
         # other children...
-      {Riverside, [MyApp.Handler, [port: 3000, path: "/"]]},
+      {Riverside, [handler: MyApp.Handler, port: 3000, path: "/"]},
      ]
 
     Supervisor.start_link(children, opts)
@@ -102,7 +106,7 @@ Define your own Handler module with **Riverside**.
 
 Implement following callback functions which **Riverside** requires.
 
-- authenticate/4
+- authenticate/1
 - init/2
 - handle_message/3
 - handle_info/3
@@ -111,7 +115,7 @@ Implement following callback functions which **Riverside** requires.
 ### Spec Configuration
 
 ```elixir
-{Riverside, [MyApp.Handler, [port: 3000, path: "/"]]},
+{Riverside, [handler: MyApp.Handler, port: 3000, path: "/"]},
 ```
 
 First argument is the Handler module you prepared beforehand.
