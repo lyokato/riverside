@@ -4,15 +4,15 @@ defmodule Riverside.Codec.RawBinary do
 
   require Logger
 
-  @impl true
+  @impl Riverside.Codec
   def frame_type do
     :binary
   end
 
-  @impl true
+  @impl Riverside.Codec
   def encode(msg), do: {:ok, msg}
 
-  @impl true
+  @impl Riverside.Codec
   def decode(data), do: {:ok, data}
 
 end
