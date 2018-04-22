@@ -12,7 +12,7 @@ defmodule Riverside do
     @type terminate_reason :: {:normal, :shutdown | :timeout}
                             | {:remote, :closed}
                             | {:remote, :cowboy_websocket.close_code, binary}
-                            | {:error, :badencoding | :badframe | :closed | :too_many_massages | atom}
+                            | {:error, :badencoding | :badframe | :closed | :too_many_massages | :over_age | atom}
 
     @callback __handle_authentication__(req :: AuthRequest.t)
       :: {:ok, Session.user_id, any}
@@ -21,6 +21,7 @@ defmodule Riverside do
 
     @callback __max_connections__() :: non_neg_integer
     @callback __show_debug_logs__() :: boolean
+    @callback __connection_max_age__() :: pos_integer | :inifinity
 
     @callback __transmission_limit__() :: keyword
 
@@ -66,9 +67,10 @@ defmodule Riverside do
 
       config = Riverside.Config.load(__MODULE__, opts)
 
-      @max_connections Keyword.get(config, :max_connections, 65536)
-      @codec           Keyword.get(config, :codec, Riverside.Codec.JSON)
-      @show_debug_logs Keyword.get(config, :show_debug_logs, false)
+      @max_connections    Keyword.get(config, :max_connections, 65536)
+      @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
+      @show_debug_logs    Keyword.get(config, :show_debug_logs, false)
+      @connection_max_age Keyword.get(config, :connection_max_age, :infinity)
 
       @transmission_limit Riverside.Config.transmission_limit(config)
 
@@ -92,6 +94,9 @@ defmodule Riverside do
 
       @impl Riverside.Behaviour
       def __show_debug_logs__, do: @show_debug_logs
+
+      @impl Riverside.Behaviour
+      def __connection_max_age__, do: @connection_max_age
 
       @impl Riverside.Behaviour
       def __max_connections__, do: @max_connections
@@ -119,7 +124,7 @@ defmodule Riverside do
         else
 
           if @show_debug_logs do
-            Logger.debug "<Riverside.#{session}> unsupported frame type: #{frame_type}"
+            Logger.debug "<Riverside.Connection:#{inspect self()}>(#{session}) unsupported frame type: #{frame_type}"
           end
 
           {:error, :unsupported}
