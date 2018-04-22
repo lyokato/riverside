@@ -2,12 +2,12 @@ defmodule Riverside.Codec.JSON do
 
   @behaviour Riverside.Codec
 
-  @impl true
+  @impl Riverside.Codec
   def frame_type do
     :text
   end
 
-  @impl true
+  @impl Riverside.Codec
   def encode(msg) do
     case Poison.encode(msg) do
 
@@ -20,7 +20,7 @@ defmodule Riverside.Codec.JSON do
     end
   end
 
-  @impl true
+  @impl Riverside.Codec
   def decode(data) do
       case Poison.decode(data) do
 

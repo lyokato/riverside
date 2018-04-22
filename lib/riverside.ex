@@ -49,7 +49,7 @@ defmodule Riverside do
     @callback handle_info(info    :: any,
                           session :: Session.t,
                           state   :: any)
-      :: {:ok, Session.t}
+      :: {:ok, Session.t, any}
 
     @callback terminate(reason  :: terminate_reason,
                         session :: Session.t,

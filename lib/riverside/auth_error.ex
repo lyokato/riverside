@@ -28,7 +28,7 @@ defmodule Riverside.AuthError do
     if error != nil do
       put_auth_error_header(err,
                             "WWW-Authenticate",
-                            "Bearer realm=\"#{realm}\" error=\"#{error}\" ")
+                            "Bearer realm=\"#{realm}\" error=\"#{error}\"")
     else
       put_auth_error_header(err,
                             "WWW-Authenticate",
