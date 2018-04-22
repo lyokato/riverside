@@ -4,12 +4,15 @@ defmodule Riverside.Connection do
 
   require Logger
 
+  alias Riverside.AuthRequest
+  alias Riverside.AuthError
+  alias Riverside.ExceptionGuard
+  alias Riverside.IO.Random
   alias Riverside.LocalDelivery
   alias Riverside.PeerAddress
   alias Riverside.Session
   alias Riverside.Stats
   alias Riverside.Util.CowboyUtil
-  alias Riverside.ExceptionGuard
 
   @type shutdown_reason :: :too_many_messages
 
@@ -33,7 +36,7 @@ defmodule Riverside.Connection do
   def init(req, opts) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> init",
+      "<Riverside.Connection:#{inspect self()}> init",
       fn -> {:ok, CowboyUtil.response(req, 500, %{})} end,
       fn ->
 
@@ -42,23 +45,23 @@ defmodule Riverside.Connection do
       handler = Keyword.fetch!(opts, :handler)
 
       if handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.Connection> incoming new request: #{peer}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}> incoming new request: #{peer}"
       end
 
       if Stats.number_of_current_connections() >= handler.__max_connections__() do
 
-        Logger.warn "<Riverside.Connection> connection number is over limit"
+        Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
 
         {:ok, req, {:unset, handler.__show_debug_logs__}}
 
       else
 
-        auth_req = Riverside.AuthRequest.new(req, peer)
+        auth_req = AuthRequest.new(req, peer)
 
         case handler.__handle_authentication__(auth_req) do
 
           {:ok, user_id, handler_state} ->
-            session_id = Riverside.IO.Random.hex(20)
+            session_id = Random.hex(20)
             state = new(handler, user_id, session_id, peer, handler_state)
             {:cowboy_websocket, req, state}
 
@@ -66,12 +69,12 @@ defmodule Riverside.Connection do
             state = new(handler, user_id, session_id, peer, handler_state)
             {:cowboy_websocket, req, state}
 
-          {:error, %Riverside.AuthError{code: code, headers: headers}} ->
+          {:error, %AuthError{code: code, headers: headers}} ->
             {:ok, CowboyUtil.response(req, code, headers), {:unset, handler.__show_debug_logs__}}
 
           other ->
             if handler.__show_debug_logs__ do
-              Logger.debug "<Riverside.Connection> failed to authenticate by reason: #{inspect other}, shutdown"
+              Logger.debug "<Riverside.Connection:#{inspect self()}> failed to authenticate by reason: #{inspect other}, shutdown"
             end
             {:ok, CowboyUtil.response(req, 500, %{}), {:unset, handler.__show_debug_logs__}}
 
@@ -86,17 +89,17 @@ defmodule Riverside.Connection do
   def websocket_init(state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_init",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) websocket_init",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @init"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @init"
       end
 
       if Stats.number_of_current_connections() >= state.handler.__max_connections__() do
 
-        Logger.warn "<Riverside.Connection> connection number is over limit"
+        Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
 
         {:stop, state}
 
@@ -121,22 +124,25 @@ defmodule Riverside.Connection do
   def websocket_info(:post_init, state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_info",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) websocket_info",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @post_init"
+        Logger.debug "<Riverside.#{inspect self()}>(#{state.session}) @post_init"
       end
 
       case state.handler.init(state.session, state.handler_state) do
 
         {:ok, session2, handler_state2} ->
+          if state.handler.__connection_max_age__ != :infinity do
+            Process.send_after(self(), :over_age, state.handler.__connection_max_age__)
+          end
           state2 = %{state| session: session2, handler_state: handler_state2}
           {:ok, state2, :hibernate}
 
         {:error, reason} ->
-          Logger.info "<Riverside.#{state.session}> failed to initialize: #{inspect reason}"
+          Logger.info "<Riverside.Connection:#{inspect self()}>(#{state.session}) failed to initialize: #{inspect reason}"
           {:stop, state}
 
       end
@@ -145,10 +151,20 @@ defmodule Riverside.Connection do
 
   end
 
+  def websocket_info(:over_age, state) do
+
+    if state.handler.__show_debug_logs__ do
+      Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @over_age"
+    end
+
+    {:stop, %{state| shutdown_reason: :over_age}}
+
+  end
+
   def websocket_info(:stop, state) do
 
     if state.handler.__show_debug_logs__ do
-      Logger.debug "<Riverside.#{state.session}> @stop"
+      Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @stop"
     end
 
     {:stop, state}
@@ -157,7 +173,7 @@ defmodule Riverside.Connection do
   def websocket_info({:deliver, type, msg}, state) do
 
     if state.handler.__show_debug_logs__ do
-      Logger.debug "<Riverside.#{state.session}> @deliver"
+      Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @deliver"
     end
 
     Stats.countup_outgoing_messages()
@@ -168,12 +184,12 @@ defmodule Riverside.Connection do
   def websocket_info({:EXIT, pid, reason}, %{session: session}=state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_info",
+      "<Riverside.Connection:#{inspect self()}>(#{session}) websocket_info",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{session}> @exit: #{inspect pid} -> #{inspect self()}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{session}) @exit: #{inspect pid} -> #{inspect self()}"
       end
 
       if Session.should_delegate_exit?(session, pid) do
@@ -197,12 +213,12 @@ defmodule Riverside.Connection do
   def websocket_info(event, state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_info",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) websocket_info",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @info: #{inspect event}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @info: #{inspect event}"
       end
 
       handler_info(event, state)
@@ -229,12 +245,12 @@ defmodule Riverside.Connection do
   def websocket_handle(:ping, state) do
 
     ExceptionGuard.guard(
-      "<Riverrise.Connection> websocket_handle",
+      "<Riverrise.Connection:#{inspect self()}> websocket_handle",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @ping"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @ping"
       end
 
       handle_frame(:ping, nil, state)
@@ -246,12 +262,12 @@ defmodule Riverside.Connection do
   def websocket_handle({:binary, data}, state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_handle",
+      "<Riverside.Connection:#{inspect self()}> websocket_handle",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @binary"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @binary"
       end
 
       handle_frame(:binary, data, state)
@@ -263,12 +279,12 @@ defmodule Riverside.Connection do
   def websocket_handle({:text, data}, state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> websocket_handle",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) websocket_handle",
       fn -> {:stop, state} end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @text"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @text"
       end
 
       handle_frame(:text, data, state)
@@ -280,7 +296,7 @@ defmodule Riverside.Connection do
   def websocket_handle(event, state) do
 
     if state.handler.__show_debug_logs__ do
-      Logger.debug "<Riverside.#{state.session}> handle: unsupported event #{inspect event}"
+      Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) handle: unsupported event #{inspect event}"
     end
 
     {:ok, state}
@@ -289,19 +305,19 @@ defmodule Riverside.Connection do
 
   def terminate(reason, _req, {:unset, show_debug_logs}) do
     if show_debug_logs do
-      Logger.debug "<Riverside> @terminate: #{inspect reason}"
+      Logger.debug "<Riverside.Connection:#{inspect self()}> @terminate: #{inspect reason}"
     end
     :ok
   end
   def terminate(reason, _req, %{shutdown_reason: nil}=state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> terminate",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) terminate",
       fn -> :ok end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @terminate: #{inspect reason}"
       end
 
       state.handler.terminate(reason, state.session, state.handler_state)
@@ -316,12 +332,12 @@ defmodule Riverside.Connection do
   def terminate(reason, _req, state) do
 
     ExceptionGuard.guard(
-      "<Riverside.Connection> terminate",
+      "<Riverside.Connection:#{inspect self()}>(#{state.session}) terminate",
       fn -> :ok end,
       fn ->
 
       if state.handler.__show_debug_logs__ do
-        Logger.debug "<Riverside.#{state.session}> @terminate: #{inspect reason}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @terminate: #{inspect reason}"
       end
 
       state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
@@ -350,14 +366,14 @@ defmodule Riverside.Connection do
 
           {:error, reason} ->
             if state.handler.__show_debug_logs__ do
-              Logger.debug "<Riverside.#{session2}> failed to handle frame_type #{inspect type}: #{inspect reason}"
+              Logger.debug "<Riverside.Connection:#{inspect self()}>(#{session2}) failed to handle frame_type #{inspect type}: #{inspect reason}"
             end
             {:ok, state2}
 
         end
 
       {:error, :too_many_messages} ->
-        Logger.warn "<Riverside.#{session}> too many messages: #{Session.peer_address(session)}"
+        Logger.warn "<Riverside.Connection:#{inspect self()}>(#{session}) too many messages: #{Session.peer_address(session)}"
         {:stop, %{state| shutdown_reason: :too_many_messages}}
 
     end
