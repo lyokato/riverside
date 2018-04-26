@@ -19,6 +19,6 @@ config :riverside, TestMaxConnectionHandler,
 #config :riverside, TestChannelBroadcastHandler, []
 
 config :logger,
-  level: :debug,
+  level: :warn,
   truncate: 4096
 
