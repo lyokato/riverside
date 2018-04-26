@@ -19,11 +19,7 @@ defmodule Riverside do
        | {:ok, Session.user_id, Session.session_id, any}
        | {:error, Riverside.AuthError.t}
 
-    @callback __max_connections__() :: non_neg_integer
-    @callback __show_debug_logs__() :: boolean
-    @callback __connection_max_age__() :: pos_integer | :inifinity
-
-    @callback __transmission_limit__() :: keyword
+    @callback __config__() :: map
 
     @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
                               message    :: binary,
@@ -67,12 +63,13 @@ defmodule Riverside do
 
       config = Riverside.Config.load(__MODULE__, opts)
 
-      @max_connections    Keyword.get(config, :max_connections, 65536)
-      @codec              Keyword.get(config, :codec, Riverside.Codec.JSON)
-      @show_debug_logs    Keyword.get(config, :show_debug_logs, false)
-      @connection_max_age Keyword.get(config, :connection_max_age, :infinity)
-
-      @transmission_limit Riverside.Config.transmission_limit(config)
+      @riverside_config %{
+        max_connections:    Keyword.get(config, :max_connections, 65536),
+        codec:              Keyword.get(config, :codec, Riverside.Codec.JSON),
+        show_debug_logs:    Keyword.get(config, :show_debug_logs, false),
+        connection_max_age: Keyword.get(config, :connection_max_age, :infinity),
+        transmission_limit: Riverside.Config.transmission_limit(config),
+      }
 
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
@@ -90,16 +87,7 @@ defmodule Riverside do
       import Riverside.Session, only: [trap_exit: 2]
 
       @impl Riverside.Behaviour
-      def __transmission_limit__, do: @transmission_limit
-
-      @impl Riverside.Behaviour
-      def __show_debug_logs__, do: @show_debug_logs
-
-      @impl Riverside.Behaviour
-      def __connection_max_age__, do: @connection_max_age
-
-      @impl Riverside.Behaviour
-      def __max_connections__, do: @max_connections
+      def __config__, do: @riverside_config
 
       @impl Riverside.Behaviour
       def __handle_authentication__(req) do
@@ -109,9 +97,9 @@ defmodule Riverside do
       @impl Riverside.Behaviour
       def __handle_data__(frame_type, data, session, state) do
 
-        if @codec.frame_type === frame_type do
+        if @riverside_config.codec.frame_type === frame_type do
 
-          case @codec.decode(data) do
+          case @riverside_config.codec.decode(data) do
 
             {:ok, message} ->
               handle_message(message, session, state)
@@ -123,7 +111,7 @@ defmodule Riverside do
 
         else
 
-          if @show_debug_logs do
+          if @riverside_config.show_debug_logs do
             Logger.debug "<Riverside.Connection:#{inspect self()}>(#{session}) unsupported frame type: #{frame_type}"
           end
 
@@ -143,10 +131,10 @@ defmodule Riverside do
       @spec deliver(Riverside.LocalDelivery.destination, any) :: :ok | :error
 
       def deliver(dest, data) do
-        case @codec.encode(data) do
+        case @riverside_config.codec.encode(data) do
 
           {:ok, value} ->
-            deliver(dest, {@codec.frame_type, value})
+            deliver(dest, {@riverside_config.codec.frame_type, value})
 
           {:error, :invalid_messsage} ->
             :error
@@ -186,10 +174,10 @@ defmodule Riverside do
       @spec deliver_me(any) :: :ok | :error
 
       def deliver_me(data) do
-        case @codec.encode(data) do
+        case @riverside_config.codec.encode(data) do
 
           {:ok, value} ->
-            deliver_me(@codec.frame_type, value)
+            deliver_me(@riverside_config.codec.frame_type, value)
 
           {:error, :invalid_messsage} ->
             :error
