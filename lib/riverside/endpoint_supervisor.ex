@@ -3,10 +3,6 @@ defmodule Riverside.EndpointSupervisor do
   use Supervisor
   alias Riverside.Config
 
-  @default_port 3000
-  @default_path "/"
-  @default_timeout 60_000
-
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
@@ -25,19 +21,19 @@ defmodule Riverside.EndpointSupervisor do
       Plug.Adapters.Cowboy2, [
         scheme: :http,
         plug:    router,
-        options: cowboy_opts(router, handler, opts)
+        options: cowboy_opts(router, handler)
       ]
     }]
 
   end
 
-  defp cowboy_opts(router, module, opts) do
+  defp cowboy_opts(router, module) do
 
     Config.ensure_module_loaded(module)
 
-    port         = Keyword.get(opts, :port, @default_port)
-    path         = Keyword.get(opts, :path, @default_path)
-    idle_timeout = Keyword.get(opts, :idle_timeout, @default_timeout)
+    port         = module.__config__.port
+    path         = module.__config__.path
+    idle_timeout = module.__config__.idle_timeout
 
     cowboy_opts = [
       port:             port,
@@ -45,7 +41,7 @@ defmodule Riverside.EndpointSupervisor do
       protocol_options: [{:idle_timeout, idle_timeout}]
     ]
 
-    if Keyword.get(opts, :reuse_port, false) do
+    if module.__config__.reuse_port do
       cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
     else
       cowboy_opts
