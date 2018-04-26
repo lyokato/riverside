@@ -52,7 +52,7 @@ defmodule Riverside.Connection do
 
         Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
 
-        {:ok, req, {:unset, handler.__config__.show_debug_logs}}
+        {:ok, CowboyUtil.response(req, 503, %{}), {:unset, handler.__config__.show_debug_logs}}
 
       else
 
