@@ -61,15 +61,7 @@ defmodule Riverside do
 
       @behaviour Riverside.Behaviour
 
-      config = Riverside.Config.load(__MODULE__, opts)
-
-      @riverside_config %{
-        max_connections:    Keyword.get(config, :max_connections, 65536),
-        codec:              Keyword.get(config, :codec, Riverside.Codec.JSON),
-        show_debug_logs:    Keyword.get(config, :show_debug_logs, false),
-        connection_max_age: Keyword.get(config, :connection_max_age, :infinity),
-        transmission_limit: Riverside.Config.transmission_limit(config),
-      }
+      @riverside_config Riverside.Config.load(__MODULE__, opts)
 
       import Riverside.LocalDelivery, only: [
         join_channel: 1,
