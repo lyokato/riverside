@@ -9,6 +9,7 @@ defmodule Riverside.EndpointSupervisor do
 
   def init(opts) do
     Riverside.MetricsInstrumenter.setup()
+    Riverside.MetricsExporter.setup()
     children(opts)
     |> Supervisor.init(strategy: :one_for_one)
   end
