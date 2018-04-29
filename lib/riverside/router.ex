@@ -13,6 +13,8 @@ defmodule Riverside.Router do
   plug :match
   plug :dispatch
 
+  plug Riverside.MetricsExporter
+
   # just for health check
   get "/health" do
     conn

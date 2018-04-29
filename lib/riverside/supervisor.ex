@@ -13,7 +13,6 @@ defmodule Riverside.Supervisor do
 
   defp children(opts) do
     [
-      Riverside.Stats,
       {Riverside.EndpointSupervisor, opts},
       {TheEnd.AcceptanceStopper, [
         timeout:  0,

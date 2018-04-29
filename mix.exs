@@ -13,29 +13,31 @@ defmodule Riverside.Mixfile do
 
   def application do
     [extra_applications: [
-      :logger,
       :cowboy,
-      :secure_random,
-      :uuid,
-      :plug,
       :ebus,
+      :logger,
+      :msgpax,
+      :plug,
       :poison,
-      :msgpax
+      :prometheus_plugs,
+      :secure_random,
+      :uuid
       ]]
   end
 
   defp deps do
     [
      {:cowboy, "~> 2.2.0"},
-     {:secure_random, "~> 0.5.1"},
-     {:uuid, "~> 1.1"},
      {:ebus, "~> 0.2.1", hex: :erlbus},
-     {:poison, "~> 3.1"},
+     #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:msgpax, "~> 2.0"},
+     {:plug, "~> 1.5"},
+     {:poison, "~> 3.1"},
+     {:prometheus_plugs, "~> 1.1.1"},
+     {:secure_random, "~> 0.5.1"},
      {:socket, "~> 0.3.12"},
      {:the_end, "~> 1.1.0"},
-     #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
-     {:plug, "~> 1.5"}
+     {:uuid, "~> 1.1"}
     ]
   end
 
