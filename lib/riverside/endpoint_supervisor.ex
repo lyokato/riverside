@@ -8,8 +8,6 @@ defmodule Riverside.EndpointSupervisor do
   end
 
   def init(opts) do
-    Riverside.MetricsInstrumenter.setup()
-    Riverside.MetricsExporter.setup()
     children(opts)
     |> Supervisor.init(strategy: :one_for_one)
   end
@@ -17,7 +15,13 @@ defmodule Riverside.EndpointSupervisor do
   def children(opts) do
 
     handler = Keyword.fetch!(opts, :handler)
+
     router = Keyword.get(opts, :router, Riverside.Router)
+    if router == Riverside.Router do
+      Riverside.MetricsExporter.setup()
+    end
+
+    Riverside.MetricsInstrumenter.setup()
 
     [{
       Plug.Adapters.Cowboy2, [
