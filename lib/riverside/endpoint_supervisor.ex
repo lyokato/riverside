@@ -15,7 +15,13 @@ defmodule Riverside.EndpointSupervisor do
   def children(opts) do
 
     handler = Keyword.fetch!(opts, :handler)
+
     router = Keyword.get(opts, :router, Riverside.Router)
+    if router == Riverside.Router do
+      Riverside.MetricsExporter.setup()
+    end
+
+    Riverside.MetricsInstrumenter.setup()
 
     [{
       Plug.Adapters.Cowboy2, [
