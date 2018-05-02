@@ -9,9 +9,9 @@ defmodule Riverside.Connection do
   alias Riverside.ExceptionGuard
   alias Riverside.IO.Random
   alias Riverside.LocalDelivery
+  alias Riverside.MetricsInstrumenter
   alias Riverside.PeerAddress
   alias Riverside.Session
-  alias Riverside.Stats
   alias Riverside.Util.CowboyUtil
 
   @type shutdown_reason :: :too_many_messages
@@ -48,7 +48,7 @@ defmodule Riverside.Connection do
         Logger.debug "<Riverside.Connection:#{inspect self()}> incoming new request: #{peer}"
       end
 
-      if Stats.number_of_current_connections() >= handler.__config__.max_connections do
+      if MetricsInstrumenter.number_of_current_connections() >= handler.__config__.max_connections do
 
         Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
 
@@ -97,7 +97,7 @@ defmodule Riverside.Connection do
         Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @init"
       end
 
-      if Stats.number_of_current_connections() >= state.handler.__config__.max_connections do
+      if MetricsInstrumenter.number_of_current_connections() >= state.handler.__config__.max_connections do
 
         Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
 
@@ -109,7 +109,7 @@ defmodule Riverside.Connection do
 
         send self(), :post_init
 
-        Stats.countup_connections()
+        MetricsInstrumenter.countup_connections()
 
         LocalDelivery.register(state.session.user_id, state.session.id)
 
@@ -176,7 +176,7 @@ defmodule Riverside.Connection do
       Logger.debug "<Riverside.Connection:#{inspect self()}>(#{state.session}) @deliver"
     end
 
-    Stats.countup_outgoing_messages()
+    MetricsInstrumenter.countup_outgoing_messages()
 
     {:reply, {type, msg}, state, :hibernate}
   end
@@ -322,7 +322,7 @@ defmodule Riverside.Connection do
 
       state.handler.terminate(reason, state.session, state.handler_state)
 
-      Stats.countdown_connections()
+      MetricsInstrumenter.countdown_connections(state.session.started_at)
 
       :ok
 
@@ -342,7 +342,7 @@ defmodule Riverside.Connection do
 
       state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
 
-      Stats.countdown_connections()
+      MetricsInstrumenter.countdown_connections(state.session.started_at)
 
       :ok
 
@@ -352,7 +352,7 @@ defmodule Riverside.Connection do
 
   defp handle_frame(type, data, %{handler: handler, session: session}=state) do
 
-    Stats.countup_incoming_messages()
+    MetricsInstrumenter.countup_incoming_messages()
 
     case Session.countup_messages(session, handler.__config__.transmission_limit) do
 

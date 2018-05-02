@@ -31,7 +31,7 @@ defmodule Riverside.EchoTest do
     Riverside.IO.Random.Sandbox.start_link
     Riverside.IO.Random.Sandbox.mode(:real)
 
-    Riverside.Stats.start_link
+    Riverside.MetricsInstrumenter.setup()
 
     {:ok, pid} = TestServer.start(TestEchoHandler, 3000, "/")
 
