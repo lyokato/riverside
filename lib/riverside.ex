@@ -2,7 +2,7 @@ defmodule Riverside do
 
   @moduledoc ~S"""
 
-  # Riversie - Plain WebSocket Server Framework for Elixir
+  # Riverside - Plain WebSocket Server Framework for Elixir
 
   ## Getting Started
 
