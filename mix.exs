@@ -3,7 +3,7 @@ defmodule Riverside.Mixfile do
 
   def project do
     [app: :riverside,
-     version: "0.4.5",
+     version: "1.0.0",
      elixir: "~> 1.5",
      package: package(),
      build_embedded: Mix.env == :prod,
@@ -29,7 +29,7 @@ defmodule Riverside.Mixfile do
     [
      {:cowboy, "~> 2.2.0"},
      {:ebus, "~> 0.2.1", hex: :erlbus},
-     #{:ex_doc, "~> 0.15", only: :dev, runtime: false},
+     {:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:msgpax, "~> 2.0"},
      {:plug, "~> 1.5"},
      {:poison, "~> 3.1"},
@@ -43,11 +43,11 @@ defmodule Riverside.Mixfile do
 
   defp package() do
     [
-      description: "A simple WebSocket server frame work.",
+      description: "A plain WebSocket server frame work.",
       licenses: ["MIT"],
       links: %{
-        "Github" => "https://github.com/lyokato/riverside"
-        # "Docs" => "https://hexdocs.pm/riverside"
+        "Github" => "https://github.com/lyokato/riverside",
+        "Docs" => "https://hexdocs.pm/riverside"
       },
       maintainers: ["Lyo Kato"]
     ]
