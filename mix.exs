@@ -43,11 +43,11 @@ defmodule Riverside.Mixfile do
 
   defp package() do
     [
-      description: "A plain WebSocket server frame work.",
+      description: "A plain WebSocket server framework.",
       licenses: ["MIT"],
       links: %{
         "Github" => "https://github.com/lyokato/riverside",
-        "Docs" => "https://hexdocs.pm/riverside"
+        "Docs" => "https://hexdocs.pm/riverside/Riverside.html"
       },
       maintainers: ["Lyo Kato"]
     ]
