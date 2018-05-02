@@ -1,4 +1,4 @@
-# Riversiee - Plain WebSocket Server Framework for Elixir
+# Riverside - Plain WebSocket Server Framework for Elixir
 
 ## Installation
 
