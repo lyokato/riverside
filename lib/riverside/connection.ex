@@ -352,8 +352,6 @@ defmodule Riverside.Connection do
 
   defp handle_frame(type, data, %{handler: handler, session: session}=state) do
 
-    MetricsInstrumenter.countup_incoming_messages()
-
     case Session.countup_messages(session, handler.__config__.transmission_limit) do
 
       {:ok, session2} ->
@@ -381,9 +379,11 @@ defmodule Riverside.Connection do
   end
 
   defp handle_data(:text, data, state) do
+    MetricsInstrumenter.countup_incoming_messages()
     state.handler.__handle_data__(:text, data, state.session, state.handler_state)
   end
   defp handle_data(:binary, data, state) do
+    MetricsInstrumenter.countup_incoming_messages()
     state.handler.__handle_data__(:binary, data, state.session, state.handler_state)
   end
   defp handle_data(:ping, _data, state) do
