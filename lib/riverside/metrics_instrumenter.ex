@@ -22,12 +22,14 @@ defmodule Riverside.MetricsInstrumenter do
     Counter.declare([
       name: :riverside_incoming_messages_total,
       registry: @registry,
+      labels: ["frame_type"],
       help: "Incoming Messages Count"
     ])
 
     Counter.declare([
       name: :riverside_outgoing_messages_total,
       registry: @registry,
+      labels: ["frame_type"],
       help: "Outgoing Messages Count"
     ])
 
@@ -83,20 +85,22 @@ defmodule Riverside.MetricsInstrumenter do
     :ok
   end
 
-  def countup_incoming_messages() do
+  def countup_incoming_messages(frame_type) do
 
     Counter.inc([
       name: :riverside_incoming_messages_total,
+      labels: [frame_type],
       registry: @registry
     ])
 
     :ok
   end
 
-  def countup_outgoing_messages() do
+  def countup_outgoing_messages(frame_type) do
 
     Counter.inc([
       name: :riverside_outgoing_messages_total,
+      labels: [frame_type],
       registry: @registry
     ])
 

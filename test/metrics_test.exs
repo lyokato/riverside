@@ -59,8 +59,8 @@ defmodule Riverside.MetricsTest do
     stats1 = get_metrics()
     assert stats1["riverside_sessions_total"]== 0
     assert stats1["riverside_connected_sessions_count"]== 0
-    assert stats1["riverside_incoming_messages_total"]== 0
-    assert stats1["riverside_outgoing_messages_total"]== 0
+    assert stats1["riverside_incoming_messages_total"]== nil
+    assert stats1["riverside_outgoing_messages_total"]== nil
 
     {:ok, client} = TestClient.start_link(host: "localhost", port: 3000, path: "/")
 
@@ -68,8 +68,8 @@ defmodule Riverside.MetricsTest do
     stats2 = get_metrics()
     assert stats2["riverside_sessions_total"]== 1
     assert stats2["riverside_connected_sessions_count"]== 1
-    assert stats2["riverside_incoming_messages_total"]== 0
-    assert stats2["riverside_outgoing_messages_total"]== 0
+    assert stats2["riverside_incoming_messages_total"]== nil
+    assert stats2["riverside_outgoing_messages_total"]== nil
 
     TestClient.test_message(%{
       sender: client,
@@ -88,8 +88,8 @@ defmodule Riverside.MetricsTest do
     stats3 = get_metrics()
     assert stats3["riverside_sessions_total"]== 1
     assert stats3["riverside_connected_sessions_count"]== 1
-    assert stats3["riverside_incoming_messages_total"]== 1
-    assert stats3["riverside_outgoing_messages_total"]== 1
+    assert stats3["riverside_incoming_messages_total{frame_type=\"text\"}"]== 1
+    assert stats3["riverside_outgoing_messages_total{frame_type=\"text\"}"]== 1
 
     TestClient.test_message(%{
       sender: client,
@@ -108,8 +108,8 @@ defmodule Riverside.MetricsTest do
     stats4 = get_metrics()
     assert stats4["riverside_sessions_total"]== 1
     assert stats4["riverside_connected_sessions_count"]== 1
-    assert stats4["riverside_incoming_messages_total"]== 2
-    assert stats4["riverside_outgoing_messages_total"]== 1
+    assert stats4["riverside_incoming_messages_total{frame_type=\"text\"}"]== 2
+    assert stats4["riverside_outgoing_messages_total{frame_type=\"text\"}"]== 1
 
     TestClient.stop(client)
 
@@ -119,8 +119,8 @@ defmodule Riverside.MetricsTest do
     stats5 = get_metrics()
     assert stats5["riverside_sessions_total"]== 1
     assert stats5["riverside_connected_sessions_count"]== 0
-    assert stats5["riverside_incoming_messages_total"]== 2
-    assert stats5["riverside_outgoing_messages_total"]== 1
+    assert stats5["riverside_incoming_messages_total{frame_type=\"text\"}"]== 2
+    assert stats5["riverside_outgoing_messages_total{frame_type=\"text\"}"]== 1
 
   end
 
