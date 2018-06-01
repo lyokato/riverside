@@ -30,8 +30,8 @@ defmodule Riverside.Util.CowboyUtil do
 
   def x_forwarded_for(req) do
     case :cowboy_req.parse_header("x-forwarded-for", req) do
-      {:ok, [head|_tail], _} -> head
-      _                      -> ""
+      [head|_tail] -> head
+      _            -> ""
     end
   end
 
