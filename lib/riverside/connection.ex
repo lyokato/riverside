@@ -50,9 +50,9 @@ defmodule Riverside.Connection do
 
       if MetricsInstrumenter.number_of_current_connections() >= handler.__config__.max_connections do
 
-        Logger.warn "<Riverside.Connection:#{inspect self()}> connection number is over limit"
+        Logger.warn "<Riverside.Connection:#{inspect self()}> connection number reached the limit."
 
-        {:ok, CowboyUtil.response(req, 503, %{}), {:unset, handler.__config__.show_debug_logs}}
+        {:ok, CowboyUtil.response(req, 508, %{}), {:unset, handler.__config__.show_debug_logs}}
 
       else
 
@@ -373,7 +373,7 @@ defmodule Riverside.Connection do
         end
 
       {:error, :too_many_messages} ->
-        Logger.warn "<Riverside.Connection:#{inspect self()}>(#{session}) too many messages: #{Session.peer_address(session)}"
+        Logger.debug "<Riverside.Connection:#{inspect self()}>(#{session}) too many messages: #{Session.peer_address(session)}"
         {:stop, %{state| shutdown_reason: :too_many_messages}}
 
     end
