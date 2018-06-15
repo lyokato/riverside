@@ -52,7 +52,8 @@ defmodule Riverside.Connection do
 
         Logger.warn "<Riverside.Connection:#{inspect self()}> connection number reached the limit."
 
-        {:ok, CowboyUtil.response(req, 508, %{}), {:unset, handler.__config__.show_debug_logs}}
+        # :cow_http.status/1 doesn't support 508, so use 503 instead
+        {:ok, CowboyUtil.response(req, 503, %{}), {:unset, handler.__config__.show_debug_logs}}
 
       else
 

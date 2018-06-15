@@ -27,7 +27,7 @@ defmodule Riverside.Mixfile do
 
   defp deps do
     [
-     {:cowboy, "~> 2.2.0"},
+     {:cowboy, "~> 2.2"},
      {:ebus, "~> 0.2.1", hex: :erlbus},
      {:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:msgpax, "~> 2.0"},
