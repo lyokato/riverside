@@ -9,7 +9,7 @@ by adding `riverside` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:riverside, "~> 1.0.7"}
+    {:riverside, "~> 1.1.0"}
   ]
 end
 ```
@@ -34,7 +34,7 @@ defmodule MySocketHandler do
   # set 'otp_app' param like Ecto.Repo
   use Riverside, otp_app: :my_app
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
 
     # `msg` is a 'TEXT' or 'BINARY' frame sent by client,
@@ -155,26 +155,26 @@ defmodule MySocketHandler do
 
   use Riverside, otp_app: :my_app
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def init(session, state) do
     # initialization
     {:ok, session, state}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}
 
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_info(into, session, state) do
     # handle message sent to this process
     {:ok, session, state}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def terminate(reason, session, state) do
 　　# cleanup
     :ok
@@ -191,7 +191,7 @@ defmodule MySocketHandler do
 
   use Riverside, otp_app: :my_app
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     {username, password} = req.basic
     case MyAuthenticator.authenticate(username, password) do
@@ -206,24 +206,24 @@ defmodule MySocketHandler do
     end
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def init(session, state) do
     {:ok, session, state}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}
 
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_info(into, session, state) do
     {:ok, session, state}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def terminate(reason, session, state) do
     :ok
   end
@@ -242,7 +242,7 @@ And it has **Map** members
 # When client access with a URL such like ws://localhost:3000/my_ws?token=FOOBAR,
 # And you want to authenticate the `token` parameter ("FOOBAR", this time)
 
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
   # You can pick the parameter like as below
   token = req.queries["token"]
@@ -253,7 +253,7 @@ end
 ```elixir
 # Or else you want to authenticate with `Authorization` HTTP header.
 
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
   # You can pick the header value like as below
   auth_header = req.headers["authorization"]
@@ -270,7 +270,7 @@ The fact is that, you don't need to parse **Authorization** header by yourself, 
 # Pick up `username` and `password` from `Basic` Authorization header.
 # If it doesn't exist, `username` and `password` become empty strings.
 
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
   {username, password} = req.basic
   # ...
@@ -282,7 +282,7 @@ end
 # Pick up token value from `Bearer` Authorization header
 # If it doesn't exist, `token` become empty string.
 
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
   token = req.bearer_token
   # ...
@@ -296,7 +296,7 @@ You can build Riverside.AuthError struct with `auth_error_with_code/1`.
 Pass proper HTTP status code.
 
 ```elixir
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
 
   token = req.bearer_token
@@ -346,7 +346,7 @@ error = auth_erro_with_code(400)
 ### Successful authentication
 
 ```elixir
-@impl Riverside.Behaviour
+@impl Riverside
 def authenticate(req) do
 
   token = req.bearer_token
@@ -380,7 +380,7 @@ This is a `Riverside.Session.t` struct, and it includes some parameters like `us
 When you omit to define `authenticate/1`, both `user_id` and `session_id` will be set random value.
 
 ```elixir
-@impl Riverside.Behaviour
+@impl Riverside
 def handle_message(msg, session, state) do
   # session.user_id
   # session.session_id
@@ -403,7 +403,7 @@ If a client sends a simple TEXT frame with JSON format like the following
 You can handle this JSON message as a **Map**.
 
 ```elixir
-@impl Riverside.Behaviour
+@impl Riverside
 def handle_message(incoming_message, session, state) do
 
   dest_user_id = incoming_message["to"]
