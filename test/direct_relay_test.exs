@@ -3,7 +3,7 @@ defmodule TestDirectRelayHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     case req.bearer_token do
       "foo" -> {:ok, 1, %{}}
@@ -15,7 +15,7 @@ defmodule TestDirectRelayHandler do
     end
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(incoming, session, state) do
 
     dest_user = incoming["to"]
