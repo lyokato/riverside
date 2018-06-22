@@ -20,7 +20,7 @@ defmodule Riverside do
     # set 'otp_app' param like Ecto.Repo
     use Riverside, otp_app: :my_app
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def handle_message(msg, session, state) do
 
       # `msg` is a 'TEXT' or 'BINARY' frame sent by client,
@@ -141,26 +141,26 @@ defmodule Riverside do
 
     use Riverside, otp_app: :my_app
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def init(session, state) do
       # initialization
       {:ok, session, state}
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def handle_message(msg, session, state) do
       deliver_me(msg)
       {:ok, session, state}
 
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def handle_info(into, session, state) do
       # handle message sent to this process
       {:ok, session, state}
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def terminate(reason, session, state) do
   　　# cleanup
       :ok
@@ -177,7 +177,7 @@ defmodule Riverside do
 
     use Riverside, otp_app: :my_app
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def authenticate(req) do
       {username, password} = req.basic
       case MyAuthenticator.authenticate(username, password) do
@@ -192,24 +192,24 @@ defmodule Riverside do
       end
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def init(session, state) do
       {:ok, session, state}
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def handle_message(msg, session, state) do
       deliver_me(msg)
       {:ok, session, state}
 
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def handle_info(into, session, state) do
       {:ok, session, state}
     end
 
-    @impl Riverside.Behaviour
+    @impl Riverside
     def terminate(reason, session, state) do
       :ok
     end
@@ -228,7 +228,7 @@ defmodule Riverside do
   # When client access with a URL such like ws://localhost:3000/my_ws?token=FOOBAR,
   # And you want to authenticate the `token` parameter ("FOOBAR", this time)
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     # You can pick the parameter like as below
     token = req.queries["token"]
@@ -239,7 +239,7 @@ defmodule Riverside do
   ```elixir
   # Or else you want to authenticate with `Authorization` HTTP header.
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     # You can pick the header value like as below
     auth_header = req.headers["authorization"]
@@ -256,7 +256,7 @@ defmodule Riverside do
   # Pick up `username` and `password` from `Basic` Authorization header.
   # If it doesn't exist, `username` and `password` become empty strings.
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     {username, password} = req.basic
     # ...
@@ -268,7 +268,7 @@ defmodule Riverside do
   # Pick up token value from `Bearer` Authorization header
   # If it doesn't exist, `token` become empty string.
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
     token = req.bearer_token
     # ...
@@ -282,7 +282,7 @@ defmodule Riverside do
   Pass proper HTTP status code.
 
   ```elixir
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
 
     token = req.bearer_token
@@ -332,7 +332,7 @@ defmodule Riverside do
   ### Successful authentication
 
   ```elixir
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
 
     token = req.bearer_token
@@ -366,7 +366,7 @@ defmodule Riverside do
   When you omit to define `authenticate/1`, both `user_id` and `session_id` will be set random value.
 
   ```elixir
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
     # session.user_id
     # session.session_id
@@ -389,7 +389,7 @@ defmodule Riverside do
   You can handle this JSON message as a **Map**.
 
   ```elixir
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(incoming_message, session, state) do
 
     dest_user_id = incoming_message["to"]
@@ -770,59 +770,55 @@ defmodule Riverside do
   alias Riverside.AuthRequest
   alias Riverside.Session
 
-  defmodule Behaviour do
+  @type terminate_reason :: {:normal, :shutdown | :timeout}
+                          | {:remote, :closed}
+                          | {:remote, :cowboy_websocket.close_code, binary}
+                          | {:error, :badencoding | :badframe | :closed | :too_many_massages | :over_age | atom}
 
-    @type terminate_reason :: {:normal, :shutdown | :timeout}
-                            | {:remote, :closed}
-                            | {:remote, :cowboy_websocket.close_code, binary}
-                            | {:error, :badencoding | :badframe | :closed | :too_many_massages | :over_age | atom}
+  @callback __handle_authentication__(req :: AuthRequest.t)
+    :: {:ok, Session.user_id, any}
+     | {:ok, Session.user_id, Session.session_id, any}
+     | {:error, Riverside.AuthError.t}
 
-    @callback __handle_authentication__(req :: AuthRequest.t)
-      :: {:ok, Session.user_id, any}
-       | {:ok, Session.user_id, Session.session_id, any}
-       | {:error, Riverside.AuthError.t}
+  @callback __config__() :: map
 
-    @callback __config__() :: map
+  @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
+                            message    :: binary,
+                            session    :: Session.t,
+                            state      :: any)
+    :: {:ok, Session.t}
+     | {:error, :invalid_message | :unsupported }
 
-    @callback __handle_data__(frame_type :: Riverside.Codec.frame_type,
-                              message    :: binary,
-                              session    :: Session.t,
-                              state      :: any)
-      :: {:ok, Session.t}
-       | {:error, :invalid_message | :unsupported }
+  @callback authenticate(req :: AuthRequest.t)
+    :: {:ok, Session.user_id, any}
+    :: {:ok, Session.user_id, Session.session_id, any}
+     | {:error, Riverside.AuthError.t}
 
-    @callback authenticate(req :: AuthRequest.t)
-      :: {:ok, Session.user_id, any}
-      :: {:ok, Session.user_id, Session.session_id, any}
-       | {:error, Riverside.AuthError.t}
+  @callback init(session :: Session.t, state :: any)
+    :: {:ok, Session.t, any}
+     | {:error, any}
 
-    @callback init(session :: Session.t, state :: any)
-      :: {:ok, Session.t, any}
-       | {:error, any}
+  @callback handle_message(message :: any,
+                           session :: Session.t,
+                           state   :: any)
+    :: {:ok, Session.t, any}
 
-    @callback handle_message(message :: any,
-                             session :: Session.t,
-                             state   :: any)
-      :: {:ok, Session.t, any}
-
-    @callback handle_info(info    :: any,
-                          session :: Session.t,
-                          state   :: any)
-      :: {:ok, Session.t, any}
-
-    @callback terminate(reason  :: terminate_reason,
+  @callback handle_info(info    :: any,
                         session :: Session.t,
                         state   :: any)
-      :: :ok
+    :: {:ok, Session.t, any}
 
-  end
+  @callback terminate(reason  :: terminate_reason,
+                      session :: Session.t,
+                      state   :: any)
+    :: :ok
 
   defmacro __using__(opts \\ []) do
     quote location: :keep, bind_quoted: [opts: opts] do
 
       require Logger
 
-      @behaviour Riverside.Behaviour
+      @behaviour Riverside
 
       @riverside_config Riverside.Config.load(__MODULE__, opts)
 
@@ -841,15 +837,15 @@ defmodule Riverside do
 
       import Riverside.Session, only: [trap_exit: 2]
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def __config__, do: @riverside_config
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def __handle_authentication__(req) do
         authenticate(req)
       end
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def __handle_data__(frame_type, data, session, state) do
 
         if @riverside_config.codec.frame_type === frame_type do
@@ -942,23 +938,23 @@ defmodule Riverside do
       @spec close() :: no_return
       def close(), do: send(self(), :stop)
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def authenticate(req) do
         user_id    = Riverside.IO.Random.bigint()
         session_id = Riverside.IO.Random.hex(20)
         {:ok, user_id, session_id, %{}}
       end
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def init(session, state), do: {:ok, session, state}
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def handle_info(event, session, state), do: {:ok, session, state}
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def handle_message(_msg, session, state), do: {:ok, session, state}
 
-      @impl Riverside.Behaviour
+      @impl Riverside
       def terminate(_reason, _session, _state), do: :ok
 
       defoverridable [

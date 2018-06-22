@@ -3,12 +3,12 @@ defmodule TestMaxConnectionHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(_req) do
     {:ok, 1, %{}}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
     deliver_me(msg)
     {:ok, session, state}

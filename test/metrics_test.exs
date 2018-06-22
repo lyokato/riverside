@@ -3,12 +3,12 @@ defmodule TestMetricsHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(_req) do
     {:ok, 1, %{}}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(msg, session, state) do
     if msg["dont_deliver"] do
       {:ok, session, state}

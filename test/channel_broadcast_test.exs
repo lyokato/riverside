@@ -3,7 +3,7 @@ defmodule TestChannelBroadcastHandler do
   require Logger
   use Riverside, otp_app: :riverside
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def authenticate(req) do
 
     channel = req.queries["channel"]
@@ -19,7 +19,7 @@ defmodule TestChannelBroadcastHandler do
     end
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def init(session, %{channel: channel}=state) do
 
     join_channel(channel)
@@ -27,7 +27,7 @@ defmodule TestChannelBroadcastHandler do
     {:ok, session, state}
   end
 
-  @impl Riverside.Behaviour
+  @impl Riverside
   def handle_message(incoming, session, %{channel: channel}=state) do
 
     content = incoming["content"]
