@@ -18,13 +18,19 @@ defmodule Riverside.Connection do
 
   @type t :: %__MODULE__{handler:         module,
                          session:         Session.t,
-                         shutdown_reason: shutdown_reason,
+                         shutdown_reason: shutdown_reason | nil,
                          handler_state:   any}
 
   defstruct handler:         nil,
             session:         nil,
             shutdown_reason: nil,
             handler_state:   nil
+
+  @spec new(handler       :: module,
+            user_id       :: Session.user_id,
+            session_id    :: Session.session_id,
+            peer          :: PeerAddress.t,
+            handler_state :: any) :: t
 
   def new(handler, user_id, session_id, peer, handler_state) do
     %__MODULE__{handler:         handler,
@@ -236,6 +242,9 @@ defmodule Riverside.Connection do
         state2 = %{state| session: session2, handler_state: handler_state2}
         {:ok, state2}
 
+      {:stop, reason, handler_state2} ->
+        {:stop, %{state| shutdown_reason: reason, handler_state: handler_state2}}
+
       # TODO support reply?
       _other ->
         {:stop, state}
@@ -364,6 +373,9 @@ defmodule Riverside.Connection do
           {:ok, session3, handler_state3} ->
             state3 = %{state2| session: session3, handler_state: handler_state3}
             {:ok, state3, :hibernate}
+
+          {:stop, reason, handler_state3} ->
+            {:stop, %{state2| shutdown_reason: reason, handler_state: handler_state3}}
 
           {:error, reason} ->
             if state.handler.__config__.show_debug_logs do

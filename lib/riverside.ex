@@ -772,7 +772,7 @@ defmodule Riverside do
 
   @type terminate_reason :: {:normal, :shutdown | :timeout}
                           | {:remote, :closed}
-                          | {:remote, :cowboy_websocket.close_code, binary}
+                          | {:remote, :cow_ws.close_code, binary}
                           | {:error, :badencoding | :badframe | :closed | :too_many_massages | :over_age | atom}
 
   @callback __handle_authentication__(req :: AuthRequest.t)
@@ -801,12 +801,12 @@ defmodule Riverside do
   @callback handle_message(message :: any,
                            session :: Session.t,
                            state   :: any)
-    :: {:ok, Session.t, any}
+    :: {:ok, Session.t, any} | {:stop, atom, any}
 
   @callback handle_info(info    :: any,
                         session :: Session.t,
                         state   :: any)
-    :: {:ok, Session.t, any}
+    :: {:ok, Session.t, any} | {:stop, atom, any}
 
   @callback terminate(reason  :: terminate_reason,
                       session :: Session.t,

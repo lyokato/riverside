@@ -16,12 +16,14 @@ defmodule Riverside.IO.Timestamp.Sandbox do
     GenServer.call(__MODULE__, {:set_mode, mode})
   end
 
+  @impl Riverside.IO.Timestamp.Behaviour
   def seconds() do
     {:ok, seconds} = GenServer.call(__MODULE__, :get_seconds)
     Logger.debug "<Riverrise.Timestamp.Sandbox> seconds/0 returns: #{seconds}"
     seconds
   end
 
+  @impl Riverside.IO.Timestamp.Behaviour
   def milli_seconds() do
     {:ok, milli_seconds} = GenServer.call(__MODULE__, :get_milli_seconds)
     Logger.debug "<Riverrise.Timestamp.Sandbox> milli_seconds/0 returns: #{milli_seconds}"
@@ -48,14 +50,15 @@ defmodule Riverside.IO.Timestamp.Sandbox do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
+  @impl GenServer
   def init(opts) when is_list(opts) do
     {:ok, %__MODULE__{stack: opts, mode: :fixture}}
   end
 
+  @impl GenServer
   def handle_call({:set_mode, mode}, _from, state) do
     {:reply, :ok, %{state| mode: mode}}
   end
-
   def handle_call(:get_seconds, _from, %{mode: :real}=state) do
     {:reply, {:ok, Real.seconds()}, state}
   end
@@ -79,6 +82,7 @@ defmodule Riverside.IO.Timestamp.Sandbox do
     {:reply, :ok, %{state| stack: stack}}
   end
 
+  @impl GenServer
   def terminate(_reason, _state) do
     :ok
   end

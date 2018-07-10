@@ -11,7 +11,7 @@ defmodule Riverside.Session do
                          id: String.t,
                          abbreviation: String.t,
                          transmission_limitter: TransmissionLimitter.t,
-                         peer: PeerAddress.t,
+                         peer: Riverside.PeerAddress.t,
                          started_at: integer,
                          trapping_pids: MapSet.t}
 

@@ -6,6 +6,7 @@ defmodule Riverside.Session.TransmissionLimitter do
   defstruct count:      0,
             started_at: 0
 
+  @spec new() :: t
   def new() do
     %__MODULE__{count:      0,
                 started_at: Riverside.IO.Timestamp.milli_seconds()}
