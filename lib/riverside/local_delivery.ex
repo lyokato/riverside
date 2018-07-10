@@ -6,15 +6,15 @@ defmodule Riverside.LocalDelivery do
   defmodule Topic do
 
     def channel(channel_id) do
-      {:__channel__, channel_id}
+      "__channel__:#{channel_id}"
     end
 
     def user(user_id) do
-      {:__user__, user_id}
+      "__user__:#{user_id}"
     end
 
     def session(user_id, session_id) do
-      {:__session__, user_id, session_id}
+      "__session__:#{user_id}/#{session_id}"
     end
 
   end

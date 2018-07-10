@@ -18,13 +18,19 @@ defmodule Riverside.Connection do
 
   @type t :: %__MODULE__{handler:         module,
                          session:         Session.t,
-                         shutdown_reason: shutdown_reason,
+                         shutdown_reason: shutdown_reason | nil,
                          handler_state:   any}
 
   defstruct handler:         nil,
             session:         nil,
             shutdown_reason: nil,
             handler_state:   nil
+
+  @spec new(handler       :: module,
+            user_id       :: Session.user_id,
+            session_id    :: Session.session_id,
+            peer          :: PeerAddress.t,
+            handler_state :: any) :: t
 
   def new(handler, user_id, session_id, peer, handler_state) do
     %__MODULE__{handler:         handler,

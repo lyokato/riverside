@@ -38,6 +38,7 @@ defmodule Riverside.Test.TestClient do
     Socket.Web.connect(host, port, path: path, headers: headers)
   end
 
+  @impl GenServer
   def init(opts) do
 
     host    = Keyword.get(opts, :host, "localhost")
@@ -59,10 +60,14 @@ defmodule Riverside.Test.TestClient do
 
   end
 
+  @spec start_receiver(%Socket.Web{}) :: pid
   defp start_receiver(sock) do
-    spawn_link fn -> receiver_loop(self(), sock) end
+    spawn_link fn ->
+      receiver_loop(self(), sock)
+    end
   end
 
+  @spec receiver_loop(pid, %Socket.Web{}) :: no_return
   defp receiver_loop(parent, sock) do
     case receive_message(sock) do
       {:ok, type, data} ->
@@ -117,16 +122,17 @@ defmodule Riverside.Test.TestClient do
     end
   end
 
+  @impl GenServer
   def handle_call({:wait_to_receive, tests, timeout}, _from, state) do
     timer = :erlang.start_timer(timeout, self(), :timeout)
     wait_to_receive(timer, tests, state)
   end
-
   def handle_call(:stop, _from, state) do
     Socket.Web.close(state.sock)
     {:stop, :normal, :ok, state}
   end
 
+  @impl GenServer
   def handle_info({:data, type, data}, state) do
     case decode_message(state.codec, type, data) do
 
@@ -139,6 +145,7 @@ defmodule Riverside.Test.TestClient do
     end
   end
 
+  @impl GenServer
   def handle_cast({:send, packet}, %{codec: codec}=state) do
     case codec.encode(packet) do
 
@@ -152,6 +159,7 @@ defmodule Riverside.Test.TestClient do
     end
   end
 
+  @impl GenServer
   def terminate(_reason, _state) do
     :ok
   end
