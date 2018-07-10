@@ -242,6 +242,9 @@ defmodule Riverside.Connection do
         state2 = %{state| session: session2, handler_state: handler_state2}
         {:ok, state2}
 
+      {:stop, reason, handler_state2} ->
+        {:stop, %{state| shutdown_reason: reason, handler_state: handler_state2}}
+
       # TODO support reply?
       _other ->
         {:stop, state}
@@ -370,6 +373,9 @@ defmodule Riverside.Connection do
           {:ok, session3, handler_state3} ->
             state3 = %{state2| session: session3, handler_state: handler_state3}
             {:ok, state3, :hibernate}
+
+          {:stop, reason, handler_state3} ->
+            {:stop, %{state2| shutdown_reason: reason, handler_state: handler_state3}}
 
           {:error, reason} ->
             if state.handler.__config__.show_debug_logs do

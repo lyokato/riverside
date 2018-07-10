@@ -801,12 +801,12 @@ defmodule Riverside do
   @callback handle_message(message :: any,
                            session :: Session.t,
                            state   :: any)
-    :: {:ok, Session.t, any}
+    :: {:ok, Session.t, any} | {:stop, atom, any}
 
   @callback handle_info(info    :: any,
                         session :: Session.t,
                         state   :: any)
-    :: {:ok, Session.t, any}
+    :: {:ok, Session.t, any} | {:stop, atom, any}
 
   @callback terminate(reason  :: terminate_reason,
                       session :: Session.t,
