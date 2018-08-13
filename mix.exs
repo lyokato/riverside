@@ -3,7 +3,7 @@ defmodule Riverside.Mixfile do
 
   def project do
     [app: :riverside,
-     version: "1.1.1",
+     version: "1.2.0",
      elixir: "~> 1.5",
      package: package(),
      build_embedded: Mix.env == :prod,
@@ -14,7 +14,6 @@ defmodule Riverside.Mixfile do
   def application do
     [extra_applications: [
       :cowboy,
-      :ebus,
       :logger,
       :msgpax,
       :plug,
@@ -27,13 +26,13 @@ defmodule Riverside.Mixfile do
 
   defp deps do
     [
-     {:cowboy, "~> 2.2"},
-     {:ebus, "~> 0.2.1", hex: :erlbus},
+     {:cowboy, "~> 2.4"},
      {:ex_doc, "~> 0.15", only: :dev, runtime: false},
      {:msgpax, "~> 2.0"},
      {:plug, "~> 1.5"},
      {:poison, "~> 3.1"},
-     {:prometheus_plugs, "~> 1.1.1"},
+     {:prometheus_plugs, "~> 1.1.5"},
+     {:prometheus_ex, "~> 3.0.2"},
      {:secure_random, "~> 0.5.1"},
      {:socket, "~> 0.3.12"},
      {:the_end, "~> 1.1.0"},
