@@ -20,7 +20,7 @@ defmodule Riverside.Mixfile do
       :poison,
       :prometheus_plugs,
       :secure_random,
-      :uuid
+      :elixir_uuid
       ]]
   end
 
@@ -36,7 +36,7 @@ defmodule Riverside.Mixfile do
      {:secure_random, "~> 0.5.1"},
      {:socket, "~> 0.3.12"},
      {:the_end, "~> 1.1.0"},
-     {:uuid, "~> 1.1"}
+     {:elixir_uuid, "~> 1.2"}
     ]
   end
 
