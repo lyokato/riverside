@@ -1,5 +1,4 @@
 defmodule TestMaxConnectionHandler do
-
   require Logger
   use Riverside, otp_app: :riverside
 
@@ -13,22 +12,19 @@ defmodule TestMaxConnectionHandler do
     deliver_me(msg)
     {:ok, session, state}
   end
-
 end
 
 defmodule Riverside.MaxConnectionTest do
-
   use ExUnit.Case
 
   alias Riverside.Test.TestServer
   alias Riverside.Test.TestClient
 
   setup do
-
-    Riverside.IO.Timestamp.Sandbox.start_link
+    Riverside.IO.Timestamp.Sandbox.start_link()
     Riverside.IO.Timestamp.Sandbox.mode(:real)
 
-    Riverside.IO.Random.Sandbox.start_link
+    Riverside.IO.Random.Sandbox.start_link()
     Riverside.IO.Random.Sandbox.mode(:real)
 
     Riverside.MetricsInstrumenter.setup()
@@ -48,5 +44,4 @@ defmodule Riverside.MaxConnectionTest do
     result2 = TestClient.start_link(host: "localhost", port: 3000, path: "/")
     assert elem(result2, 0) == :error
   end
-
 end

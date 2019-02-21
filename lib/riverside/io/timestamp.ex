@@ -1,5 +1,4 @@
 defmodule Riverside.IO.Timestamp do
-
   defmodule Behaviour do
     @callback seconds() :: non_neg_integer
     @callback milli_seconds() :: non_neg_integer
@@ -18,5 +17,4 @@ defmodule Riverside.IO.Timestamp do
   def milli_seconds() do
     @impl_mod.milli_seconds()
   end
-
 end

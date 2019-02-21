@@ -1,16 +1,18 @@
 defmodule TestAuthBasicHandler do
-
   require Logger
   use Riverside, otp_app: :riverside
 
   @impl Riverside
   def authenticate(req) do
     {username, password} = req.basic
+
     if username == "valid_example" and password == "foobar" do
       {:ok, username, %{}}
     else
-      error = auth_error_with_code(401)
-            |> put_auth_error_basic_header("example.org")
+      error =
+        auth_error_with_code(401)
+        |> put_auth_error_basic_header("example.org")
+
       {:error, error}
     end
   end
@@ -20,22 +22,19 @@ defmodule TestAuthBasicHandler do
     deliver_me(msg)
     {:ok, session, state}
   end
-
 end
 
 defmodule Riverside.Auth.BasicTest do
-
   use ExUnit.Case
 
   alias Riverside.Test.TestServer
   alias Riverside.Test.TestClient
 
   setup do
-
-    Riverside.IO.Timestamp.Sandbox.start_link
+    Riverside.IO.Timestamp.Sandbox.start_link()
     Riverside.IO.Timestamp.Sandbox.mode(:real)
 
-    Riverside.IO.Random.Sandbox.start_link
+    Riverside.IO.Random.Sandbox.start_link()
     Riverside.IO.Random.Sandbox.mode(:real)
 
     Riverside.MetricsInstrumenter.setup()
@@ -54,47 +53,60 @@ defmodule Riverside.Auth.BasicTest do
   end
 
   test "authenticate with bad type authorization header" do
-    {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Bearer xxxx"}])
+    {:error, {code, _desc}} =
+      TestClient.connect("localhost", 3000, "/", [{:authorization, "Bearer xxxx"}])
+
     assert code == 401
   end
 
   test "authenticate with bad token" do
-    {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Basic bad_token"}])
+    {:error, {code, _desc}} =
+      TestClient.connect("localhost", 3000, "/", [{:authorization, "Basic bad_token"}])
+
     assert code == 401
   end
 
   test "authenticate with bad username" do
-    {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Basic " <> build_token("invalid", "foobar")}])
+    {:error, {code, _desc}} =
+      TestClient.connect("localhost", 3000, "/", [
+        {:authorization, "Basic " <> build_token("invalid", "foobar")}
+      ])
+
     assert code == 401
   end
 
   test "authenticate with bad password" do
-    {:error, {code, _desc}} = TestClient.connect("localhost", 3000, "/",
-                                                 [{:authorization, "Basic " <> build_token("valid_example", "invalid")}])
+    {:error, {code, _desc}} =
+      TestClient.connect("localhost", 3000, "/", [
+        {:authorization, "Basic " <> build_token("valid_example", "invalid")}
+      ])
+
     assert code == 401
   end
 
   test "authenticate with correct token" do
-
-    {:ok, client} = TestClient.start_link(host: "localhost",
-                                          port: 3000,
-                                          path: "/",
-                                          headers: [{:authorization, "Basic " <> build_token("valid_example", "foobar")}])
+    {:ok, client} =
+      TestClient.start_link(
+        host: "localhost",
+        port: 3000,
+        path: "/",
+        headers: [{:authorization, "Basic " <> build_token("valid_example", "foobar")}]
+      )
 
     TestClient.test_message(%{
       sender: client,
       message: %{"content" => "Hello"},
-      receivers: [%{receiver: client, tests: [
-        fn msg ->
-          assert Map.has_key?(msg, "content")
-          assert msg["content"] == "Hello"
-        end
-      ]}]
+      receivers: [
+        %{
+          receiver: client,
+          tests: [
+            fn msg ->
+              assert Map.has_key?(msg, "content")
+              assert msg["content"] == "Hello"
+            end
+          ]
+        }
+      ]
     })
-
   end
-
 end

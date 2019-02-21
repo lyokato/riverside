@@ -1,5 +1,4 @@
 defmodule Riverside.Config do
-
   @moduledoc ~S"""
   Helper for config data
   """
@@ -9,20 +8,20 @@ defmodule Riverside.Config do
   """
   @spec load(module, any) :: any
   def load(handler, opts) do
-
-    config = Keyword.fetch!(opts, :otp_app)
-           |> Application.get_env(handler, [])
+    config =
+      Keyword.fetch!(opts, :otp_app)
+      |> Application.get_env(handler, [])
 
     %{
-      max_connections:    Keyword.get(config, :max_connections, 65536),
-      codec:              Keyword.get(config, :codec, Riverside.Codec.JSON),
-      show_debug_logs:    Keyword.get(config, :show_debug_logs, false),
+      max_connections: Keyword.get(config, :max_connections, 65536),
+      codec: Keyword.get(config, :codec, Riverside.Codec.JSON),
+      show_debug_logs: Keyword.get(config, :show_debug_logs, false),
       connection_max_age: Keyword.get(config, :connection_max_age, :infinity),
-      port:               Keyword.get(config, :port, 3000),
-      path:               Keyword.get(config, :path, "/"),
-      idle_timeout:       Keyword.get(config, :idle_timeout, 60_000),
-      reuse_port:         Keyword.get(config, :reuse_port, false),
-      transmission_limit: transmission_limit(config),
+      port: Keyword.get(config, :port, 3000),
+      path: Keyword.get(config, :path, "/"),
+      idle_timeout: Keyword.get(config, :idle_timeout, 60_000),
+      reuse_port: Keyword.get(config, :reuse_port, false),
+      transmission_limit: transmission_limit(config)
     }
   end
 
@@ -49,9 +48,10 @@ defmodule Riverside.Config do
   @spec ensure_module_loaded(module) :: :ok
   def ensure_module_loaded(module) do
     unless Code.ensure_loaded?(module) do
-      raise ArgumentError, "#{module} not compiled, ensure the name is correct and it's included in project dependencies."
+      raise ArgumentError,
+            "#{module} not compiled, ensure the name is correct and it's included in project dependencies."
     end
+
     :ok
   end
-
 end

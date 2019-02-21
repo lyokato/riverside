@@ -1,5 +1,4 @@
 defmodule TestAuthQueryHandler do
-
   require Logger
   use Riverside, otp_app: :riverside
 
@@ -7,6 +6,7 @@ defmodule TestAuthQueryHandler do
   def authenticate(req) do
     if req.queries["user"] != nil do
       username = req.queries["user"]
+
       if username == "valid_example" do
         {:ok, username, %{}}
       else
@@ -24,22 +24,19 @@ defmodule TestAuthQueryHandler do
     deliver_me(msg)
     {:ok, session, state}
   end
-
 end
 
 defmodule Riverside.Auth.QueryTest do
-
   use ExUnit.Case
 
   alias Riverside.Test.TestServer
   alias Riverside.Test.TestClient
 
   setup do
-
-    Riverside.IO.Timestamp.Sandbox.start_link
+    Riverside.IO.Timestamp.Sandbox.start_link()
     Riverside.IO.Timestamp.Sandbox.mode(:real)
 
-    Riverside.IO.Random.Sandbox.start_link
+    Riverside.IO.Random.Sandbox.start_link()
     Riverside.IO.Random.Sandbox.mode(:real)
 
     Riverside.MetricsInstrumenter.setup()
@@ -64,20 +61,23 @@ defmodule Riverside.Auth.QueryTest do
   end
 
   test "authenticate with correct query" do
-
-    {:ok, client} = TestClient.start_link(host: "localhost", port: 3000, path: "/?user=valid_example")
+    {:ok, client} =
+      TestClient.start_link(host: "localhost", port: 3000, path: "/?user=valid_example")
 
     TestClient.test_message(%{
       sender: client,
       message: %{"content" => "Hello"},
-      receivers: [%{receiver: client, tests: [
-        fn msg ->
-          assert Map.has_key?(msg, "content")
-          assert msg["content"] == "Hello"
-        end
-      ]}]
+      receivers: [
+        %{
+          receiver: client,
+          tests: [
+            fn msg ->
+              assert Map.has_key?(msg, "content")
+              assert msg["content"] == "Hello"
+            end
+          ]
+        }
+      ]
     })
-
   end
-
 end
