@@ -824,7 +824,7 @@ defmodule Riverside do
 
       @behaviour Riverside
 
-      @riverside_config Riverside.Config.load(__MODULE__, opts)
+      @opts opts
 
       import Riverside.LocalDelivery,
         only: [
@@ -844,7 +844,7 @@ defmodule Riverside do
       import Riverside.Session, only: [trap_exit: 2]
 
       @impl Riverside
-      def __config__, do: @riverside_config
+      def __config__, do: Riverside.Config.load(__MODULE__, @opts)
 
       @impl Riverside
       def __handle_authentication__(req) do
@@ -853,8 +853,8 @@ defmodule Riverside do
 
       @impl Riverside
       def __handle_data__(frame_type, data, session, state) do
-        if @riverside_config.codec.frame_type === frame_type do
-          case @riverside_config.codec.decode(data) do
+        if __config__().codec.frame_type === frame_type do
+          case __config__().codec.decode(data) do
             {:ok, message} ->
               handle_message(message, session, state)
 
@@ -862,7 +862,7 @@ defmodule Riverside do
               {:error, :invalid_message}
           end
         else
-          if @riverside_config.show_debug_logs do
+          if __config__().show_debug_logs do
             Logger.debug(
               "<Riverside.Connection:#{inspect(self())}>(#{session}) unsupported frame type: #{
                 frame_type
@@ -886,9 +886,9 @@ defmodule Riverside do
       @spec deliver(Riverside.LocalDelivery.destination(), any) :: :ok | :error
 
       def deliver(dest, data) do
-        case @riverside_config.codec.encode(data) do
+        case __config__().codec.encode(data) do
           {:ok, value} ->
-            deliver(dest, {@riverside_config.codec.frame_type, value})
+            deliver(dest, {__config__().codec.frame_type, value})
 
           {:error, :invalid_messsage} ->
             :error
@@ -935,9 +935,9 @@ defmodule Riverside do
       @spec deliver_me(any) :: :ok | :error
 
       def deliver_me(data) do
-        case @riverside_config.codec.encode(data) do
+        case __config__().codec.encode(data) do
           {:ok, value} ->
-            deliver_me(@riverside_config.codec.frame_type, value)
+            deliver_me(__config__().codec.frame_type, value)
 
           {:error, :invalid_messsage} ->
             :error
