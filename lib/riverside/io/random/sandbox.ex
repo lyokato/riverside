@@ -1,5 +1,4 @@
 defmodule Riverside.IO.Random.Sandbox do
-
   @behaviour Riverside.IO.Random.Behaviour
 
   require Logger
@@ -9,8 +8,8 @@ defmodule Riverside.IO.Random.Sandbox do
 
   @type mode :: :fixture | :real
 
-  defstruct uuid:   [],
-            hex:    [],
+  defstruct uuid: [],
+            hex: [],
             bigint: [],
             mode: :fixture
 
@@ -20,19 +19,19 @@ defmodule Riverside.IO.Random.Sandbox do
 
   def hex(len) do
     {:ok, hex} = GenServer.call(__MODULE__, {:hex, len})
-    Logger.debug "<Riverside.Random.Sandbox> hex/1 returns: #{hex}"
+    Logger.debug("<Riverside.Random.Sandbox> hex/1 returns: #{hex}")
     hex
   end
 
   def bigint() do
     {:ok, bigint} = GenServer.call(__MODULE__, :bigint)
-    Logger.debug "<Riverside.Random.Sandbox> bigint/0 returns: #{bigint}"
+    Logger.debug("<Riverside.Random.Sandbox> bigint/0 returns: #{bigint}")
     bigint
   end
 
   def uuid() do
     {:ok, uuid} = GenServer.call(__MODULE__, :uuid)
-    Logger.debug "<Riverside.Random.Sandbox> uuid/0 returns: #{uuid}"
+    Logger.debug("<Riverside.Random.Sandbox> uuid/0 returns: #{uuid}")
     uuid
   end
 
@@ -43,9 +42,10 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_hex(list) when is_list(list) do
-    Logger.debug "<Riverside.Random.Sandbox> hex refreshes to #{inspect list}"
+    Logger.debug("<Riverside.Random.Sandbox> hex refreshes to #{inspect(list)}")
     GenServer.call(__MODULE__, {:set_hex_list, list})
   end
+
   def set_hex(hex) do
     set_hex([hex])
   end
@@ -57,9 +57,10 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_bigint(list) when is_list(list) do
-    Logger.debug "<Riverside.Random.Sandbox> bigint refreshes to #{inspect list}"
+    Logger.debug("<Riverside.Random.Sandbox> bigint refreshes to #{inspect(list)}")
     GenServer.call(__MODULE__, {:set_bigint_list, list})
   end
+
   def set_bigint(bigint) do
     set_bigint([bigint])
   end
@@ -71,9 +72,10 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def set_uuid(list) when is_list(list) do
-    Logger.debug "<Riverside.Random.Sandbox> Random UUI refreshes to #{inspect list}"
+    Logger.debug("<Riverside.Random.Sandbox> Random UUI refreshes to #{inspect(list)}")
     GenServer.call(__MODULE__, {:set_uuid_list, list})
   end
+
   def set_uuid(uuid) do
     set_uuid([uuid])
   end
@@ -87,43 +89,46 @@ defmodule Riverside.IO.Random.Sandbox do
   end
 
   def handle_call({:set_mode, mode}, _from, state) do
-    {:reply, :ok, %{state| mode: mode}}
+    {:reply, :ok, %{state | mode: mode}}
   end
 
   def handle_call({:set_hex_list, list}, _from, state) do
-    {:reply, :ok, %{state| hex: list}}
+    {:reply, :ok, %{state | hex: list}}
   end
 
   def handle_call({:set_bigint_list, list}, _from, state) do
-    {:reply, :ok, %{state| bigint: list}}
+    {:reply, :ok, %{state | bigint: list}}
   end
 
   def handle_call({:set_uuid_list, list}, _from, state) do
-    {:reply, :ok, %{state| uuid: list}}
+    {:reply, :ok, %{state | uuid: list}}
   end
 
-  def handle_call({:hex, len}, _from, %{mode: :real}=state) do
+  def handle_call({:hex, len}, _from, %{mode: :real} = state) do
     {:reply, {:ok, Real.hex(len)}, state}
   end
-  def handle_call({:hex, _len}, _from, %{hex: stack}=state) do
+
+  def handle_call({:hex, _len}, _from, %{hex: stack} = state) do
     {hex, stack2} = shift_stack(stack)
-    {:reply, {:ok, hex}, %{state| hex: stack2}}
+    {:reply, {:ok, hex}, %{state | hex: stack2}}
   end
 
-  def handle_call(:bigint, _from, %{mode: :real}=state) do
+  def handle_call(:bigint, _from, %{mode: :real} = state) do
     {:reply, {:ok, Real.bigint()}, state}
   end
-  def handle_call(:bigint, _from, %{bigint: stack}=state) do
+
+  def handle_call(:bigint, _from, %{bigint: stack} = state) do
     {bigint, stack2} = shift_stack(stack)
-    {:reply, {:ok, bigint}, %{state| bigint: stack2}}
+    {:reply, {:ok, bigint}, %{state | bigint: stack2}}
   end
 
-  def handle_call(:uuid, _from, %{mode: :real}=state) do
+  def handle_call(:uuid, _from, %{mode: :real} = state) do
     {:reply, {:ok, Real.uuid()}, state}
   end
-  def handle_call(:uuid, _from, %{uuid: stack}=state) do
+
+  def handle_call(:uuid, _from, %{uuid: stack} = state) do
     {uuid, stack2} = shift_stack(stack)
-    {:reply, {:ok, uuid}, %{state| uuid: stack2}}
+    {:reply, {:ok, uuid}, %{state | uuid: stack2}}
   end
 
   def terminate(_reason, _state) do
@@ -133,8 +138,8 @@ defmodule Riverside.IO.Random.Sandbox do
   defp shift_stack([]) do
     raise "<Riverside.Random.Sandbox> No more dummy data, set enough amount of them"
   end
-  defp shift_stack([first|rest]) do
+
+  defp shift_stack([first | rest]) do
     {first, rest}
   end
-
 end

@@ -1,22 +1,27 @@
 defmodule Riverside.Test.TestServer do
-
-  @spec start(handelr :: module,
-              port    :: non_neg_integer,
-              path    :: String.t) :: {:ok, pid}
+  @spec start(
+          handelr :: module,
+          port :: non_neg_integer,
+          path :: String.t()
+        ) :: {:ok, pid}
   def start(handler, port, path) do
-    :cowboy.start_clear(:test_server,
+    :cowboy.start_clear(
+      :test_server,
       [{:port, port}],
-      %{env: %{
-        dispatch: dispatch(handler, path)
-      } }
+      %{
+        env: %{
+          dispatch: dispatch(handler, path)
+        }
+      }
     )
   end
 
   defp dispatch(handler, path) do
     :cowboy_router.compile([
-      {:_, [
-        {path, Riverside.Connection, [handler: handler]}
-      ]}
+      {:_,
+       [
+         {path, Riverside.Connection, [handler: handler]}
+       ]}
     ])
   end
 

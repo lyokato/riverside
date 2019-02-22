@@ -1,5 +1,4 @@
 defmodule Riverside.EndpointSupervisor do
-
   use Supervisor
   alias Riverside.Config
 
@@ -13,37 +12,38 @@ defmodule Riverside.EndpointSupervisor do
   end
 
   def children(opts) do
-
     handler = Keyword.fetch!(opts, :handler)
 
     router = Keyword.get(opts, :router, Riverside.Router)
+
     if router == Riverside.Router do
       Riverside.MetricsExporter.setup()
     end
 
     Riverside.MetricsInstrumenter.setup()
 
-    [{
-      Plug.Adapters.Cowboy2, [
-        scheme: :http,
-        plug:    router,
-        options: cowboy_opts(router, handler)
-      ]
-    }]
-
+    [
+      {
+        Plug.Adapters.Cowboy2,
+        [
+          scheme: :http,
+          plug: router,
+          options: cowboy_opts(router, handler)
+        ]
+      }
+    ]
   end
 
   defp cowboy_opts(router, module) do
-
     Config.ensure_module_loaded(module)
 
-    port         = module.__config__.port
-    path         = module.__config__.path
+    port = module.__config__.port
+    path = module.__config__.path
     idle_timeout = module.__config__.idle_timeout
 
     cowboy_opts = [
-      port:             port,
-      dispatch:         dispatch_opts(module, router, path),
+      port: port,
+      dispatch: dispatch_opts(module, router, path),
       protocol_options: [{:idle_timeout, idle_timeout}]
     ]
 
@@ -52,16 +52,15 @@ defmodule Riverside.EndpointSupervisor do
     else
       cowboy_opts
     end
-
   end
 
   defp dispatch_opts(module, router, path) do
     [
-      {:_, [
-        {path, Riverside.Connection, [handler: module]},
-        {:_, Plug.Adapters.Cowboy2.Handler, {router, []}}
-      ]}
+      {:_,
+       [
+         {path, Riverside.Connection, [handler: module]},
+         {:_, Plug.Adapters.Cowboy2.Handler, {router, []}}
+       ]}
     ]
   end
-
 end

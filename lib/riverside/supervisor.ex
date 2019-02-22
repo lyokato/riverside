@@ -1,5 +1,4 @@
 defmodule Riverside.Supervisor do
-
   use Supervisor
 
   def start_link(args) do
@@ -15,12 +14,12 @@ defmodule Riverside.Supervisor do
     [
       {Registry, keys: :duplicate, name: Riverside.PubSub},
       {Riverside.EndpointSupervisor, opts},
-      {TheEnd.AcceptanceStopper, [
-        timeout:  0,
-        endpoint: Riverside.Supervisor,
-        gatherer: TheEnd.ListenerGatherer.Plug
-      ]}
+      {TheEnd.AcceptanceStopper,
+       [
+         timeout: 0,
+         endpoint: Riverside.Supervisor,
+         gatherer: TheEnd.ListenerGatherer.Plug
+       ]}
     ]
   end
-
 end

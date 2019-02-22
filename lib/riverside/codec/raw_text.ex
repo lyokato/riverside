@@ -1,5 +1,4 @@
 defmodule Riverside.Codec.RawText do
-
   @behaviour Riverside.Codec
 
   require Logger
@@ -14,5 +13,4 @@ defmodule Riverside.Codec.RawText do
 
   @impl Riverside.Codec
   def decode(data), do: {:ok, data}
-
 end

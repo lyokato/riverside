@@ -1,19 +1,20 @@
 defmodule Riverside.Session do
-
   @abbreviation_header "Session"
 
   alias Riverside.Session.TransmissionLimitter
 
-  @type user_id :: non_neg_integer | String.t
-  @type session_id :: String.t
+  @type user_id :: non_neg_integer | String.t()
+  @type session_id :: String.t()
 
-  @type t :: %__MODULE__{user_id: user_id,
-                         id: String.t,
-                         abbreviation: String.t,
-                         transmission_limitter: TransmissionLimitter.t,
-                         peer: Riverside.PeerAddress.t,
-                         started_at: integer,
-                         trapping_pids: MapSet.t}
+  @type t :: %__MODULE__{
+          user_id: user_id,
+          id: String.t(),
+          abbreviation: String.t(),
+          transmission_limitter: TransmissionLimitter.t(),
+          peer: Riverside.PeerAddress.t(),
+          started_at: integer,
+          trapping_pids: MapSet.t()
+        }
 
   defstruct user_id: 0,
             id: "",
@@ -23,18 +24,19 @@ defmodule Riverside.Session do
             started_at: 0,
             trapping_pids: nil
 
-  @spec new(user_id, session_id, Riverside.PeerAddress.t) :: t
+  @spec new(user_id, session_id, Riverside.PeerAddress.t()) :: t
   def new(user_id, session_id, peer) do
-
     abbreviation = create_abbreviation(user_id, session_id)
 
-    %__MODULE__{user_id: user_id,
-                id: session_id,
-                abbreviation: abbreviation,
-                transmission_limitter: TransmissionLimitter.new(),
-                trapping_pids: MapSet.new(),
-                started_at: :erlang.monotonic_time,
-                peer: peer}
+    %__MODULE__{
+      user_id: user_id,
+      id: session_id,
+      abbreviation: abbreviation,
+      transmission_limitter: TransmissionLimitter.new(),
+      trapping_pids: MapSet.new(),
+      started_at: :erlang.monotonic_time(),
+      peer: peer
+    }
   end
 
   defp create_abbreviation(user_id, session_id) do
@@ -47,43 +49,37 @@ defmodule Riverside.Session do
   end
 
   @spec trap_exit(t, pid) :: t
-  def trap_exit(%{trapping_pids: pids}=session, pid) do
-    %{session |trapping_pids: MapSet.put(pids, pid)}
+  def trap_exit(%{trapping_pids: pids} = session, pid) do
+    %{session | trapping_pids: MapSet.put(pids, pid)}
   end
 
   @spec forget_to_trap_exit(t, pid) :: t
-  def forget_to_trap_exit(%{trapping_pids: pids}=session, pid) do
-    %{session |trapping_pids: MapSet.delete(pids, pid)}
+  def forget_to_trap_exit(%{trapping_pids: pids} = session, pid) do
+    %{session | trapping_pids: MapSet.delete(pids, pid)}
   end
 
-  @spec countup_messages(t, keyword) :: {:ok, t}
-    | {:error, :too_many_messages}
-  def countup_messages(%{transmission_limitter: limitter}=session, opts) do
-
+  @spec countup_messages(t, keyword) ::
+          {:ok, t}
+          | {:error, :too_many_messages}
+  def countup_messages(%{transmission_limitter: limitter} = session, opts) do
     duration = Keyword.fetch!(opts, :duration)
     capacity = Keyword.fetch!(opts, :capacity)
 
     case TransmissionLimitter.countup(limitter, duration, capacity) do
-
-      {:ok, limitter} -> {:ok, %{session|transmission_limitter: limitter}}
-
+      {:ok, limitter} -> {:ok, %{session | transmission_limitter: limitter}}
       {:error, :too_many_messages} = error -> error
-
     end
   end
 
   def peer_address(%__MODULE__{peer: peer}) do
     "#{peer}"
   end
-
 end
 
 defimpl String.Chars, for: Riverside.Session do
-
   alias Riverside.Session
 
   def to_string(%Session{abbreviation: abbreviation}) do
     abbreviation
   end
-
 end

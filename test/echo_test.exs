@@ -1,5 +1,4 @@
 defmodule TestEchoHandler do
-
   require Logger
   use Riverside, otp_app: :riverside
 
@@ -13,22 +12,19 @@ defmodule TestEchoHandler do
     deliver_me(msg)
     {:ok, session, state}
   end
-
 end
 
 defmodule Riverside.EchoTest do
-
   use ExUnit.Case
 
   alias Riverside.Test.TestServer
   alias Riverside.Test.TestClient
 
   setup do
-
-    Riverside.IO.Timestamp.Sandbox.start_link
+    Riverside.IO.Timestamp.Sandbox.start_link()
     Riverside.IO.Timestamp.Sandbox.mode(:real)
 
-    Riverside.IO.Random.Sandbox.start_link
+    Riverside.IO.Random.Sandbox.start_link()
     Riverside.IO.Random.Sandbox.mode(:real)
 
     Riverside.MetricsInstrumenter.setup()
@@ -48,14 +44,17 @@ defmodule Riverside.EchoTest do
     TestClient.test_message(%{
       sender: client,
       message: %{"content" => "Hello"},
-      receivers: [%{receiver: client, tests: [
-        fn msg ->
-          assert Map.has_key?(msg, "content")
-          assert msg["content"] == "Hello"
-        end
-      ]}]
+      receivers: [
+        %{
+          receiver: client,
+          tests: [
+            fn msg ->
+              assert Map.has_key?(msg, "content")
+              assert msg["content"] == "Hello"
+            end
+          ]
+        }
+      ]
     })
-
   end
-
 end

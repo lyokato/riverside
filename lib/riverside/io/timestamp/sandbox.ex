@@ -1,5 +1,4 @@
 defmodule Riverside.IO.Timestamp.Sandbox do
-
   @behaviour Riverside.IO.Timestamp.Behaviour
 
   require Logger
@@ -19,29 +18,31 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   @impl Riverside.IO.Timestamp.Behaviour
   def seconds() do
     {:ok, seconds} = GenServer.call(__MODULE__, :get_seconds)
-    Logger.debug "<Riverrise.Timestamp.Sandbox> seconds/0 returns: #{seconds}"
+    Logger.debug("<Riverrise.Timestamp.Sandbox> seconds/0 returns: #{seconds}")
     seconds
   end
 
   @impl Riverside.IO.Timestamp.Behaviour
   def milli_seconds() do
     {:ok, milli_seconds} = GenServer.call(__MODULE__, :get_milli_seconds)
-    Logger.debug "<Riverrise.Timestamp.Sandbox> milli_seconds/0 returns: #{milli_seconds}"
+    Logger.debug("<Riverrise.Timestamp.Sandbox> milli_seconds/0 returns: #{milli_seconds}")
     milli_seconds
   end
 
   def set_seconds(list) when is_list(list) do
-    Logger.debug "<Riverrise.Timestamp.Sandbox> refreshes to #{inspect list}"
+    Logger.debug("<Riverrise.Timestamp.Sandbox> refreshes to #{inspect(list)}")
     GenServer.call(__MODULE__, {:set_seconds_list, list})
   end
-  def set_seconds(seconds)do
+
+  def set_seconds(seconds) do
     set_seconds([seconds])
   end
 
   def set_milli_seconds(list) when is_list(list) do
-    Logger.debug "<Riverrise.Timestamp.Sandbox> refreshes to #{inspect list}"
+    Logger.debug("<Riverrise.Timestamp.Sandbox> refreshes to #{inspect(list)}")
     GenServer.call(__MODULE__, {:set_milli_seconds_list, list})
   end
+
   def set_milli_seconds(milli_seconds) do
     set_milli_seconds([milli_seconds])
   end
@@ -57,29 +58,34 @@ defmodule Riverside.IO.Timestamp.Sandbox do
 
   @impl GenServer
   def handle_call({:set_mode, mode}, _from, state) do
-    {:reply, :ok, %{state| mode: mode}}
+    {:reply, :ok, %{state | mode: mode}}
   end
-  def handle_call(:get_seconds, _from, %{mode: :real}=state) do
+
+  def handle_call(:get_seconds, _from, %{mode: :real} = state) do
     {:reply, {:ok, Real.seconds()}, state}
   end
-  def handle_call(:get_seconds, _from, %{stack: stack}=state) do
+
+  def handle_call(:get_seconds, _from, %{stack: stack} = state) do
     {ms, stack2} = shift_stack(stack)
-    {:reply, {:ok, div(ms, 1_000)}, %{state| stack: stack2}}
+    {:reply, {:ok, div(ms, 1_000)}, %{state | stack: stack2}}
   end
-  def handle_call(:get_milli_seconds, _from, %{mode: :real}=state) do
+
+  def handle_call(:get_milli_seconds, _from, %{mode: :real} = state) do
     {:reply, {:ok, Real.milli_seconds()}, state}
   end
-  def handle_call(:get_milli_seconds, _from, %{stack: stack}=state) do
+
+  def handle_call(:get_milli_seconds, _from, %{stack: stack} = state) do
     {ms, stack2} = shift_stack(stack)
-    {:reply, {:ok, ms}, %{state| stack: stack2}}
+    {:reply, {:ok, ms}, %{state | stack: stack2}}
   end
 
   def handle_call({:set_seconds_list, list}, _from, state) do
     stack = list |> Enum.map(&:erlang.*(&1, 1_000))
-    {:reply, :ok, %{state| stack: stack}}
+    {:reply, :ok, %{state | stack: stack}}
   end
+
   def handle_call({:set_milli_seconds_list, stack}, _from, state) do
-    {:reply, :ok, %{state| stack: stack}}
+    {:reply, :ok, %{state | stack: stack}}
   end
 
   @impl GenServer
@@ -90,8 +96,8 @@ defmodule Riverside.IO.Timestamp.Sandbox do
   defp shift_stack([]) do
     raise "<Riverrise.Timestamp.Sandbox> No more dummy timestamp data, set enough amount of them"
   end
-  defp shift_stack([first|rest]) do
+
+  defp shift_stack([first | rest]) do
     {first, rest}
   end
-
 end
