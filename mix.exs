@@ -2,13 +2,15 @@ defmodule Riverside.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :riverside,
-     version: "1.2.0",
-     elixir: "~> 1.5",
-     package: package(),
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      app: :riverside,
+      version: "1.2.0",
+      elixir: "~> 1.5",
+      package: package(),
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
   end
 
   def application do
@@ -51,5 +53,4 @@ defmodule Riverside.Mixfile do
       maintainers: ["Lyo Kato"]
     ]
   end
-
 end

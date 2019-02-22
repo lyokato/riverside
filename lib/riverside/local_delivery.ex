@@ -1,10 +1,8 @@
 defmodule Riverside.LocalDelivery do
-
   alias Riverside.Codec
   alias Riverside.Session
 
   defmodule Topic do
-
     def channel(channel_id) do
       "__channel__:#{channel_id}"
     end
@@ -16,22 +14,24 @@ defmodule Riverside.LocalDelivery do
     def session(user_id, session_id) do
       "__session__:#{user_id}/#{session_id}"
     end
-
   end
 
-  @type destination :: {:user, Session.user_id}
-                     | {:session, Session.user_id, String.t}
-                     | {:channel, term}
+  @type destination ::
+          {:user, Session.user_id()}
+          | {:session, Session.user_id(), String.t()}
+          | {:channel, term}
 
-  @spec deliver(destination, {Codec.frame_type, any}) :: no_return
+  @spec deliver(destination, {Codec.frame_type(), any}) :: no_return
   def deliver({:user, user_id}, {frame_type, message}) do
     Topic.user(user_id)
     |> deliver_message(frame_type, message)
   end
+
   def deliver({:session, user_id, session_id}, {frame_type, message}) do
     Topic.session(user_id, session_id)
     |> deliver_message(frame_type, message)
   end
+
   def deliver({:channel, channel_id}, {frame_type, message}) do
     Topic.channel(channel_id)
     |> deliver_message(frame_type, message)
@@ -76,5 +76,4 @@ defmodule Riverside.LocalDelivery do
       entries |> Enum.each(fn {pid, _item} -> send(pid, message) end)
     end)
   end
-
 end

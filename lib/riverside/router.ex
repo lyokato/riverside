@@ -1,19 +1,20 @@
 defmodule Riverside.Router do
-
   @moduledoc """
   Default Router module
   """
 
   use Plug.Router
 
-  plug Riverside.MetricsExporter
+  plug(Riverside.MetricsExporter)
 
-  plug Plug.Static, at: "/",
-                    from: :riverside,
-                    only: ~w(favicon.ico robots.txt)
+  plug(Plug.Static,
+    at: "/",
+    from: :riverside,
+    only: ~w(favicon.ico robots.txt)
+  )
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   # just for health check
   get "/health" do
