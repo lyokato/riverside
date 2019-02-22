@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.1] - 2019/02/22
+
+### CHANGED
+
+- merged 2 PRs from yurikoval
+- (1) uuid -> elixir_uuid:  https://github.com/lyokato/riverside/pull/48
+- (2) formatter support:  https://github.com/lyokato/riverside/pull/49
+
 ## [1.2.0] - 2018/08/12
 
 ### CHANGED
