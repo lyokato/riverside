@@ -29,7 +29,7 @@ defmodule Riverside.Mixfile do
   defp deps do
     [
      {:cowboy, "~> 2.4"},
-     {:ex_doc, "~> 0.15", only: :dev, runtime: false},
+     {:ex_doc, "~> 0.19", only: :dev, runtime: false},
      {:msgpax, "~> 2.0"},
      {:plug, "~> 1.5"},
      {:poison, "~> 3.1"},
