@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.2] - 2019/02/22
+
+### CHANGED
+
+- update ExDoc dependency 0.15 -> 0.19
+
 ## [1.2.1] - 2019/02/22
 
 ### CHANGED
