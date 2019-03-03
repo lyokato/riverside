@@ -24,7 +24,7 @@ defmodule Riverside.EndpointSupervisor do
 
     [
       {
-        Plug.Adapters.Cowboy2,
+        Plug.Cowboy,
         [
           scheme: :http,
           plug: router,
@@ -59,7 +59,7 @@ defmodule Riverside.EndpointSupervisor do
       {:_,
        [
          {path, Riverside.Connection, [handler: module]},
-         {:_, Plug.Adapters.Cowboy2.Handler, {router, []}}
+         {:_, Plug.Cowboy.Handler, {router, []}}
        ]}
     ]
   end
