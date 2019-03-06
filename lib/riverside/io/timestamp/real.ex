@@ -8,6 +8,6 @@ defmodule Riverside.IO.Timestamp.Real do
 
   @impl Riverside.IO.Timestamp.Behaviour
   def milli_seconds do
-    DateTime.utc_now() |> DateTime.to_unix(:milliseconds)
+    DateTime.utc_now() |> DateTime.to_unix(:millisecond)
   end
 end
