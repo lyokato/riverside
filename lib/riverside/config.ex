@@ -25,6 +25,33 @@ defmodule Riverside.Config do
     }
   end
 
+  @type port_type :: pos_integer | {atom, String.t(), pos_integer}
+
+  @doc ~S"""
+  Get runtime port number from configuration
+  """
+  @spec get_port(port_type) :: pos_integer
+  def get_port(port) do
+    case port do
+      num when is_integer(num) ->
+        num
+
+      str when is_binary(str) ->
+        String.to_integer(str)
+
+      {:system, env, default} when is_binary(env) and is_integer(default) ->
+        case System.get_env(env) || default do
+          num when is_integer(num) -> num
+          str when is_binary(str) -> String.to_integer(str)
+          _other -> raise ArgumentError, "'port' value should be a number"
+        end
+
+      _other ->
+        raise ArgumentError,
+              "'port' config should be a positive-number or a tuple styleed value like {:system, 'ENV_NAME', 8080}."
+    end
+  end
+
   @doc ~S"""
   Pick the TransmissionLimitter's parameters
   from Handlers configuration.
