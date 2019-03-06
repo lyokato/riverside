@@ -764,6 +764,21 @@ defmodule Riverside do
   |idle_timeout|60000|Disconnect if no event comes on a connection during this duration|
   |reuse_port|false|TCP **SO_REUSEPORT** flag|
 
+  #### Dynamic Port Number
+
+  You may set port number dinamically.
+
+  You can set port number like following.
+
+
+  ```elixir
+  config :my_app, MySocketHandler,
+    port: {:system, "MY_PORT", 3000}
+  ```
+
+  Then, port number is picked from runtime environment variable "MY_PORT".
+  if it doesn't exist, 3000 will be used.
+
   """
 
   alias Riverside.AuthRequest

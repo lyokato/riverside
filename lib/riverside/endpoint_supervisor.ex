@@ -37,7 +37,7 @@ defmodule Riverside.EndpointSupervisor do
   defp cowboy_opts(router, module) do
     Config.ensure_module_loaded(module)
 
-    port = module.__config__.port
+    port = Config.get_port(module.__config__.port)
     path = module.__config__.path
     idle_timeout = module.__config__.idle_timeout
 
