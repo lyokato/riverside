@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.3] - 2019/03/06
+
+### CHANGED
+
+- runtime port config(https://github.com/lyokato/riverside/pull/52)
+- removed deprecation warnings(https://github.com/lyokato/riverside/pull/50) thanks to yurikoval
+- dependency update: now requires plug_cowboy(2.0) and plug(1.7)
+
 ## [1.2.2] - 2019/02/22
 
 ### CHANGED
