@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.4] - 2020/04/12
+
+### CHANGED
+
+- idle timeout configuration for cowboy(https://github.com/lyokato/riverside/pull/54) thanks to Daniela Ivanova
+
 ## [1.2.3] - 2019/03/06
 
 ### CHANGED
