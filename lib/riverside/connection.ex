@@ -70,13 +70,15 @@ defmodule Riverside.Connection do
 
           case handler.__handle_authentication__(auth_req) do
             {:ok, user_id, handler_state} ->
+              timeout = handler.__config__.idle_timeout
               session_id = Random.hex(20)
               state = new(handler, user_id, session_id, peer, handler_state)
-              {:cowboy_websocket, req, state}
+              {:cowboy_websocket, req, state, %{idle_timeout: timeout}}
 
             {:ok, user_id, session_id, handler_state} ->
+              timeout = handler.__config__.idle_timeout
               state = new(handler, user_id, session_id, peer, handler_state)
-              {:cowboy_websocket, req, state}
+              {:cowboy_websocket, req, state, %{idle_timeout: timeout}}
 
             {:error, %AuthError{code: code, headers: headers}} ->
               {:ok, CowboyUtil.response(req, code, headers),
