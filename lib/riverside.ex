@@ -905,7 +905,7 @@ defmodule Riverside do
           {:ok, value} ->
             deliver(dest, {@riverside_config.codec.frame_type, value})
 
-          {:error, :invalid_messsage} ->
+          {:error, :invalid_message} ->
             :error
         end
       end
@@ -954,7 +954,7 @@ defmodule Riverside do
           {:ok, value} ->
             deliver_me(@riverside_config.codec.frame_type, value)
 
-          {:error, :invalid_messsage} ->
+          {:error, :invalid_message} ->
             :error
         end
       end
