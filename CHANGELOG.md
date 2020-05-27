@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.5] - 2020/05/26
+
+### CHANGED
+
+- fix typo in error tuple(https://github.com/lyokato/riverside/pull/55) thanks to bakkdoor
+
 ## [1.2.4] - 2020/04/12
 
 ### CHANGED
