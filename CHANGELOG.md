@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.6] - 2020/05/26
+
+### CHANGED
+
+- removed some warnings
+
 ## [1.2.5] - 2020/05/26
 
 ### CHANGED

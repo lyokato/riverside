@@ -807,8 +807,8 @@ defmodule Riverside do
               | {:error, :invalid_message | :unsupported}
 
   @callback authenticate(req :: AuthRequest.t()) ::
-              {:ok, Session.user_id(), any} ::
-              {:ok, Session.user_id(), Session.session_id(), any}
+              {:ok, Session.user_id(), any}
+              | {:ok, Session.user_id(), Session.session_id(), any}
               | {:error, Riverside.AuthError.t()}
 
   @callback init(session :: Session.t(), state :: any) ::
