@@ -29,5 +29,7 @@ defmodule Riverside.PortConfigTest do
     assert_raise ArgumentError, fn ->
       Riverside.Config.get_port({:system, "OTHER_PORT", "INVALID_TYPE"})
     end
+
+    System.put_env("TEST_PORT", temp)
   end
 end
