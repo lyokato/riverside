@@ -30,17 +30,17 @@ defmodule Riverside.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 2.4"},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:msgpax, "~> 2.0"},
-      {:plug, "~> 1.7"},
-      {:plug_cowboy, "~> 2.0"},
-      {:poison, "~> 3.1"},
-      {:prometheus_plugs, "~> 1.1.5"},
-      {:prometheus_ex, "~> 3.0.2"},
-      {:secure_random, "~> 0.5.1"},
-      {:socket, "~> 0.3.12"},
-      {:the_end, "~> 1.1.0"},
+      {:cowboy, "~> 2.9"},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:msgpax, "~> 2.3"},
+      {:plug, "~> 1.11"},
+      {:plug_cowboy, "~> 2.5"},
+      {:poison, "~> 4.0"},
+      {:prometheus_plugs, "~> 1.1"},
+      {:prometheus_ex, "~> 3.0"},
+      {:secure_random, "~> 0.5"},
+      {:socket, "~> 0.3"},
+      {:the_end, "~> 1.1"},
       {:elixir_uuid, "~> 1.2"}
     ]
   end
