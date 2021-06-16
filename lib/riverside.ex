@@ -868,7 +868,7 @@ defmodule Riverside do
 
       @impl Riverside
       def __handle_data__(frame_type, data, session, state) do
-        if @riverside_config.codec.frame_type === frame_type do
+        if @riverside_config.codec.frame_type() === frame_type do
           case @riverside_config.codec.decode(data) do
             {:ok, message} ->
               handle_message(message, session, state)
@@ -903,7 +903,7 @@ defmodule Riverside do
       def deliver(dest, data) do
         case @riverside_config.codec.encode(data) do
           {:ok, value} ->
-            deliver(dest, {@riverside_config.codec.frame_type, value})
+            deliver(dest, {@riverside_config.codec.frame_type(), value})
 
           {:error, :invalid_message} ->
             :error
@@ -952,7 +952,7 @@ defmodule Riverside do
       def deliver_me(data) do
         case @riverside_config.codec.encode(data) do
           {:ok, value} ->
-            deliver_me(@riverside_config.codec.frame_type, value)
+            deliver_me(@riverside_config.codec.frame_type(), value)
 
           {:error, :invalid_message} ->
             :error
