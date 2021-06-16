@@ -33,6 +33,5 @@ defmodule Riverside.PortConfigTest do
     if temp != nil do
       System.put_env("TEST_PORT", temp)
     end
-
   end
 end
