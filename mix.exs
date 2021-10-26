@@ -21,7 +21,6 @@ defmodule Riverside.Mixfile do
         :msgpax,
         :plug,
         :poison,
-        :prometheus_plugs,
         :secure_random,
         :elixir_uuid
       ]
@@ -31,13 +30,11 @@ defmodule Riverside.Mixfile do
   defp deps do
     [
       {:cowboy, "~> 2.9"},
-      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
       {:msgpax, "~> 2.3"},
-      {:plug, "~> 1.11"},
+      {:plug, "~> 1.12"},
       {:plug_cowboy, "~> 2.5"},
-      {:poison, "~> 4.0"},
-      {:prometheus_plugs, "~> 1.1"},
-      {:prometheus_ex, "~> 3.0"},
+      {:poison, "~> 5.0"},
       {:secure_random, "~> 0.5"},
       {:socket, "~> 0.3"},
       {:the_end, "~> 1.1"},

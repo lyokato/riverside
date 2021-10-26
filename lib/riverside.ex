@@ -879,9 +879,7 @@ defmodule Riverside do
         else
           if @riverside_config.show_debug_logs do
             Logger.debug(
-              "<Riverside.Connection:#{inspect(self())}>(#{session}) unsupported frame type: #{
-                frame_type
-              }"
+              "<Riverside.Connection:#{inspect(self())}>(#{session}) unsupported frame type: #{frame_type}"
             )
           end
 

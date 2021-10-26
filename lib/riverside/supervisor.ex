@@ -13,6 +13,7 @@ defmodule Riverside.Supervisor do
   defp children(opts) do
     [
       {Registry, keys: :duplicate, name: Riverside.PubSub},
+      Riverside.Stats,
       {Riverside.EndpointSupervisor, opts},
       {TheEnd.AcceptanceStopper,
        [

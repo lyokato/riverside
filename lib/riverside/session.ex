@@ -12,7 +12,6 @@ defmodule Riverside.Session do
           abbreviation: String.t(),
           transmission_limitter: TransmissionLimitter.t(),
           peer: Riverside.PeerAddress.t(),
-          started_at: integer,
           trapping_pids: MapSet.t()
         }
 
@@ -21,7 +20,6 @@ defmodule Riverside.Session do
             abbreviation: "",
             transmission_limitter: nil,
             peer: nil,
-            started_at: 0,
             trapping_pids: nil
 
   @spec new(user_id, session_id, Riverside.PeerAddress.t()) :: t
@@ -34,7 +32,6 @@ defmodule Riverside.Session do
       abbreviation: abbreviation,
       transmission_limitter: TransmissionLimitter.new(),
       trapping_pids: MapSet.new(),
-      started_at: :erlang.monotonic_time(),
       peer: peer
     }
   end

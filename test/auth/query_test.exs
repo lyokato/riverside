@@ -39,7 +39,7 @@ defmodule Riverside.Auth.QueryTest do
     Riverside.IO.Random.Sandbox.start_link()
     Riverside.IO.Random.Sandbox.mode(:real)
 
-    Riverside.MetricsInstrumenter.setup()
+    Riverside.Stats.start_link()
 
     {:ok, pid} = TestServer.start(TestAuthQueryHandler, 3000, "/")
 

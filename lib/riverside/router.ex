@@ -5,8 +5,6 @@ defmodule Riverside.Router do
 
   use Plug.Router
 
-  plug(Riverside.MetricsExporter)
-
   plug(Plug.Static,
     at: "/",
     from: :riverside,
