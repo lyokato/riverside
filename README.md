@@ -9,7 +9,7 @@ by adding `riverside` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:riverside, "~> 1.2.6"}
+    {:riverside, "~> 2.0.0"}
   ]
 end
 ```
@@ -17,6 +17,19 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/riverside](https://hexdocs.pm/riverside).
+
+## Version v2
+
+This library had been updated only as a bugfix for a long time, but in the meantime, the version of Elixir, plug, cowboy, etc. had been upgraded, and the version of each library that riverside depends on had become outdated.
+
+The version of each library that riverside depends on became outdated. riverside-v2 is the result of upgrading the dependent libraries and Elixir versions to more recent ones, and fixing the problems that occurred with riverside at that time.
+Although the version has been increased, there are no additional features.
+
+The functionality is almost the same as v1, but the metrics-related features that existed in v1 have been removed in v2.
+This is because the libraries that were relied on for prometheus-related functions are now too old.
+
+We decided to take this opportunity to focus on the minimum functionality in v2.
+If you need statistics, please provide them yourself.
 
 ## Getting Started
 
@@ -108,15 +121,7 @@ http://localhost:3000/health
 If you send a HTTP GET request to this URL, it returns response with status code 200, and text content "OK".
 This is just for health check.
 
-And
-
-```
-http://localhost:3000/metrics
-```
-
-This endpoint shows prometheus-formatted metrics.
-
-These features are defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
+This feature is defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
 
 **In your Application module**
 

@@ -93,15 +93,7 @@ defmodule Riverside do
   If you send a HTTP GET request to this URL, it returns response with status code 200, and text content "OK".
   This is just for health check.
 
-  And
-
-  ```
-  http://localhost:3000/metrics
-  ```
-
-  This endpoint shows prometheus-formatted metrics.
-
-  These features are defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
+  This feature is defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
 
   **In your Application module**
 
@@ -868,7 +860,7 @@ defmodule Riverside do
 
       @impl Riverside
       def __handle_data__(frame_type, data, session, state) do
-        if @riverside_config.codec.frame_type === frame_type do
+        if @riverside_config.codec.frame_type() === frame_type do
           case @riverside_config.codec.decode(data) do
             {:ok, message} ->
               handle_message(message, session, state)
@@ -879,9 +871,7 @@ defmodule Riverside do
         else
           if @riverside_config.show_debug_logs do
             Logger.debug(
-              "<Riverside.Connection:#{inspect(self())}>(#{session}) unsupported frame type: #{
-                frame_type
-              }"
+              "<Riverside.Connection:#{inspect(self())}>(#{session}) unsupported frame type: #{frame_type}"
             )
           end
 
@@ -903,7 +893,7 @@ defmodule Riverside do
       def deliver(dest, data) do
         case @riverside_config.codec.encode(data) do
           {:ok, value} ->
-            deliver(dest, {@riverside_config.codec.frame_type, value})
+            deliver(dest, {@riverside_config.codec.frame_type(), value})
 
           {:error, :invalid_message} ->
             :error
@@ -952,7 +942,7 @@ defmodule Riverside do
       def deliver_me(data) do
         case @riverside_config.codec.encode(data) do
           {:ok, value} ->
-            deliver_me(@riverside_config.codec.frame_type, value)
+            deliver_me(@riverside_config.codec.frame_type(), value)
 
           {:error, :invalid_message} ->
             :error
