@@ -121,7 +121,7 @@ http://localhost:3000/health
 If you send a HTTP GET request to this URL, it returns response with status code 200, and text content "OK".
 This is just for health check.
 
-This feature are defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
+This feature is defined in a Plug Router named `Riverside.Router`, and this is configured as default `router` param for child spec. So, you can defined your own Plug Router if you set as below.
 
 **In your Application module**
 
