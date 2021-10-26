@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.0.0] - 2021/10/26
+
+### CHANGED
+
+- bumped up libraries riverside depends on. and made riverside work as well with them.
+- removed metrics endpoints related prometheus features.
+
 ## [1.2.6] - 2020/05/26
 
 ### CHANGED
