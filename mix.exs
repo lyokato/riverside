@@ -5,7 +5,7 @@ defmodule Riverside.Mixfile do
     [
       app: :riverside,
       version: "1.2.6",
-      elixir: "~> 1.5",
+      elixir: "~> 1.11",
       package: package(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -21,7 +21,6 @@ defmodule Riverside.Mixfile do
         :msgpax,
         :plug,
         :poison,
-        :prometheus_plugs,
         :secure_random,
         :elixir_uuid
       ]
@@ -30,17 +29,15 @@ defmodule Riverside.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 2.4"},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:msgpax, "~> 2.0"},
-      {:plug, "~> 1.7"},
-      {:plug_cowboy, "~> 2.0"},
-      {:poison, "~> 3.1"},
-      {:prometheus_plugs, "~> 1.1.5"},
-      {:prometheus_ex, "~> 3.0.2"},
-      {:secure_random, "~> 0.5.1"},
-      {:socket, "~> 0.3.12"},
-      {:the_end, "~> 1.1.0"},
+      {:cowboy, "~> 2.9"},
+      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
+      {:msgpax, "~> 2.3"},
+      {:plug, "~> 1.12"},
+      {:plug_cowboy, "~> 2.5"},
+      {:poison, "~> 5.0"},
+      {:secure_random, "~> 0.5"},
+      {:socket, "~> 0.3"},
+      {:the_end, "~> 1.1"},
       {:elixir_uuid, "~> 1.2"}
     ]
   end

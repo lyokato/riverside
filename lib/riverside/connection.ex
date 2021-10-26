@@ -8,9 +8,9 @@ defmodule Riverside.Connection do
   alias Riverside.ExceptionGuard
   alias Riverside.IO.Random
   alias Riverside.LocalDelivery
-  alias Riverside.MetricsInstrumenter
   alias Riverside.PeerAddress
   alias Riverside.Session
+  alias Riverside.Stats
   alias Riverside.Util.CowboyUtil
 
   @type shutdown_reason :: :too_many_messages
@@ -57,7 +57,7 @@ defmodule Riverside.Connection do
           Logger.debug("<Riverside.Connection:#{inspect(self())}> incoming new request: #{peer}")
         end
 
-        if MetricsInstrumenter.number_of_current_connections() >=
+        if Stats.number_of_current_connections() >=
              handler.__config__.max_connections do
           Logger.warn(
             "<Riverside.Connection:#{inspect(self())}> connection number reached the limit."
@@ -87,9 +87,7 @@ defmodule Riverside.Connection do
             other ->
               if handler.__config__.show_debug_logs do
                 Logger.debug(
-                  "<Riverside.Connection:#{inspect(self())}> failed to authenticate by reason: #{
-                    inspect(other)
-                  }, shutdown"
+                  "<Riverside.Connection:#{inspect(self())}> failed to authenticate by reason: #{inspect(other)}, shutdown"
                 )
               end
 
@@ -110,7 +108,7 @@ defmodule Riverside.Connection do
           Logger.debug("<Riverside.Connection:#{inspect(self())}>(#{state.session}) @init")
         end
 
-        if MetricsInstrumenter.number_of_current_connections() >=
+        if Stats.number_of_current_connections() >=
              state.handler.__config__.max_connections do
           Logger.warn("<Riverside.Connection:#{inspect(self())}> connection number is over limit")
 
@@ -120,7 +118,7 @@ defmodule Riverside.Connection do
 
           send(self(), :post_init)
 
-          MetricsInstrumenter.countup_connections()
+          Stats.countup_connections()
 
           LocalDelivery.register(state.session.user_id, state.session.id)
 
@@ -150,9 +148,7 @@ defmodule Riverside.Connection do
 
           {:error, reason} ->
             Logger.info(
-              "<Riverside.Connection:#{inspect(self())}>(#{state.session}) failed to initialize: #{
-                inspect(reason)
-              }"
+              "<Riverside.Connection:#{inspect(self())}>(#{state.session}) failed to initialize: #{inspect(reason)}"
             )
 
             {:stop, state}
@@ -182,7 +178,7 @@ defmodule Riverside.Connection do
       Logger.debug("<Riverside.Connection:#{inspect(self())}>(#{state.session}) @deliver")
     end
 
-    MetricsInstrumenter.countup_outgoing_messages(to_string(type))
+    Stats.countup_outgoing_messages()
 
     {:reply, {type, msg}, state, :hibernate}
   end
@@ -194,9 +190,7 @@ defmodule Riverside.Connection do
       fn ->
         if state.handler.__config__.show_debug_logs do
           Logger.debug(
-            "<Riverside.Connection:#{inspect(self())}>(#{session}) @exit: #{inspect(pid)} -> #{
-              inspect(self())
-            }"
+            "<Riverside.Connection:#{inspect(self())}>(#{session}) @exit: #{inspect(pid)} -> #{inspect(self())}"
           )
         end
 
@@ -289,9 +283,7 @@ defmodule Riverside.Connection do
   def websocket_handle(event, state) do
     if state.handler.__config__.show_debug_logs do
       Logger.debug(
-        "<Riverside.Connection:#{inspect(self())}>(#{state.session}) handle: unsupported event #{
-          inspect(event)
-        }"
+        "<Riverside.Connection:#{inspect(self())}>(#{state.session}) handle: unsupported event #{inspect(event)}"
       )
     end
 
@@ -313,15 +305,13 @@ defmodule Riverside.Connection do
       fn ->
         if state.handler.__config__.show_debug_logs do
           Logger.debug(
-            "<Riverside.Connection:#{inspect(self())}>(#{state.session}) @terminate: #{
-              inspect(reason)
-            }"
+            "<Riverside.Connection:#{inspect(self())}>(#{state.session}) @terminate: #{inspect(reason)}"
           )
         end
 
         state.handler.terminate(reason, state.session, state.handler_state)
 
-        MetricsInstrumenter.countdown_connections(state.session.started_at)
+        Stats.countdown_connections()
 
         :ok
       end
@@ -335,15 +325,13 @@ defmodule Riverside.Connection do
       fn ->
         if state.handler.__config__.show_debug_logs do
           Logger.debug(
-            "<Riverside.Connection:#{inspect(self())}>(#{state.session}) @terminate: #{
-              inspect(reason)
-            }"
+            "<Riverside.Connection:#{inspect(self())}>(#{state.session}) @terminate: #{inspect(reason)}"
           )
         end
 
         state.handler.terminate(state.shutdown_reason, state.session, state.handler_state)
 
-        MetricsInstrumenter.countdown_connections(state.session.started_at)
+        Stats.countdown_connections()
 
         :ok
       end
@@ -351,7 +339,7 @@ defmodule Riverside.Connection do
   end
 
   defp handle_frame(type, data, %{handler: handler, session: session} = state) do
-    MetricsInstrumenter.countup_incoming_messages(to_string(type))
+    Stats.countup_incoming_messages()
 
     case Session.countup_messages(session, handler.__config__.transmission_limit) do
       {:ok, session2} ->
@@ -368,9 +356,7 @@ defmodule Riverside.Connection do
           {:error, reason} ->
             if state.handler.__config__.show_debug_logs do
               Logger.debug(
-                "<Riverside.Connection:#{inspect(self())}>(#{session2}) failed to handle frame_type #{
-                  inspect(type)
-                }: #{inspect(reason)}"
+                "<Riverside.Connection:#{inspect(self())}>(#{session2}) failed to handle frame_type #{inspect(type)}: #{inspect(reason)}"
               )
             end
 
@@ -379,9 +365,7 @@ defmodule Riverside.Connection do
 
       {:error, :too_many_messages} ->
         Logger.debug(
-          "<Riverside.Connection:#{inspect(self())}>(#{session}) too many messages: #{
-            Session.peer_address(session)
-          }"
+          "<Riverside.Connection:#{inspect(self())}>(#{session}) too many messages: #{Session.peer_address(session)}"
         )
 
         {:stop, %{state | shutdown_reason: :too_many_messages}}

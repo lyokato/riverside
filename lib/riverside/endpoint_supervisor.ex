@@ -16,12 +16,6 @@ defmodule Riverside.EndpointSupervisor do
 
     router = Keyword.get(opts, :router, Riverside.Router)
 
-    if router == Riverside.Router do
-      Riverside.MetricsExporter.setup()
-    end
-
-    Riverside.MetricsInstrumenter.setup()
-
     [
       {
         Plug.Cowboy,

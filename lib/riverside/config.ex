@@ -3,6 +3,28 @@ defmodule Riverside.Config do
   Helper for config data
   """
 
+  @type t :: %__MODULE__{
+          max_connections: non_neg_integer,
+          codec: module,
+          show_debug_logs: boolean,
+          connection_max_age: non_neg_integer,
+          port: non_neg_integer,
+          path: String.t(),
+          idle_timeout: non_neg_integer,
+          reuse_port: boolean,
+          transmission_limit: Keyword.t()
+        }
+
+  defstruct max_connections: 0,
+            codec: nil,
+            show_debug_logs: false,
+            connection_max_age: 0,
+            port: 0,
+            path: "",
+            idle_timeout: 0,
+            reuse_port: false,
+            transmission_limit: []
+
   @doc ~S"""
   Load handler's configuration.
   """
@@ -12,7 +34,7 @@ defmodule Riverside.Config do
       Keyword.fetch!(opts, :otp_app)
       |> Application.get_env(handler, [])
 
-    %{
+    %__MODULE__{
       max_connections: Keyword.get(config, :max_connections, 65536),
       codec: Keyword.get(config, :codec, Riverside.Codec.JSON),
       show_debug_logs: Keyword.get(config, :show_debug_logs, false),
