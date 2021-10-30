@@ -77,7 +77,7 @@ defmodule MyApp do
     ]
     |> Supervisor.start_link([
       strategy: :one_for_one,
-      name:     MyApp.Spervisor
+      name:     MyApp.Supervisor
     ])
   end
 
