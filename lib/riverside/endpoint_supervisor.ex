@@ -55,11 +55,12 @@ defmodule Riverside.EndpointSupervisor do
         cowboy_opts
       end
 
-    if Config.get_tls(module.__config__.reuse_port) do
+    if Config.get_tls(module.__config__.tls) do
       cowboy_opts ++
         [
-          certfile: Config.get_tls_certfile(module.__config__.certfile),
-          keyfile: Config.get_tls_keyfile(module.__config__.keyfile)
+          otp_app: module.__config__.otp_app,
+          certfile: Config.get_tls_certfile(module.__config__.tls_certfile),
+          keyfile: Config.get_tls_keyfile(module.__config__.tls_keyfile)
         ]
     else
       cowboy_opts

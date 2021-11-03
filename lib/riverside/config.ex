@@ -15,7 +15,8 @@ defmodule Riverside.Config do
           tls: boolean,
           tls_certfile: String.t(),
           tls_keyfile: String.t(),
-          transmission_limit: Keyword.t()
+          transmission_limit: Keyword.t(),
+          otp_app: atom
         }
 
   defstruct max_connections: 0,
@@ -29,16 +30,16 @@ defmodule Riverside.Config do
             tls: false,
             tls_certfile: "",
             tls_keyfile: "",
-            transmission_limit: []
+            transmission_limit: [],
+            otp_app: nil
 
   @doc ~S"""
   Load handler's configuration.
   """
   @spec load(module, any) :: any
   def load(handler, opts) do
-    config =
-      Keyword.fetch!(opts, :otp_app)
-      |> Application.get_env(handler, [])
+    otp_app = Keyword.fetch!(opts, :otp_app)
+    config = otp_app |> Application.get_env(handler, [])
 
     %__MODULE__{
       max_connections: Keyword.get(config, :max_connections, 65536),
@@ -52,7 +53,8 @@ defmodule Riverside.Config do
       tls: Keyword.get(config, :tls, false),
       tls_certfile: Keyword.get(config, :tls_certfile, ""),
       tls_keyfile: Keyword.get(config, :tls_keyfile, ""),
-      transmission_limit: transmission_limit(config)
+      transmission_limit: transmission_limit(config),
+      otp_app: otp_app
     }
   end
 
