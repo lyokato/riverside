@@ -9,7 +9,7 @@ by adding `riverside` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:riverside, "~> 2.0.0"}
+    {:riverside, "~> 2.1.0"}
   ]
 end
 ```
@@ -77,7 +77,7 @@ defmodule MyApp do
     ]
     |> Supervisor.start_link([
       strategy: :one_for_one,
-      name:     MyApp.Spervisor
+      name:     MyApp.Supervisor
     ])
   end
 
@@ -769,7 +769,10 @@ config :my_app, MySocketHandler,
   transmission_limit: [
     duration: 2000,
     capacity: 50
-  ]
+  ],
+  tls: true,
+  tls_certfile: "path/to/certfile",
+  tls_keyfile: "path/to/keyfile"
 ```
 
 |key|default value|description|
@@ -783,6 +786,9 @@ config :my_app, MySocketHandler,
 |transmission_limit|duration:2000, capacity:50| if <:capacity> frames are sent on a connection in <:duration> milliseconds, disconnect it.Then  `terminate/3` will be called with **:too_many_messages** as a reason.|
 |idle_timeout|60000|Disconnect if no event comes on a connection during this duration|
 |reuse_port|false|TCP **SO_REUSEPORT** flag|
+|tls|false|use TLS or not. If you set this flag, then you must also set the two parameters tls_certfile and tls_keyfile.|
+|tls_certfile|""|path to cert file for TLS|
+|tls_keyfile|""|path to private-key file for TLS|
 
 #### Dynamic Port Number
 
@@ -798,6 +804,17 @@ config :my_app, MySocketHandler,
 
 Then, port number is picked from runtime environment variable "MY_PORT".
 if it doesn't exist, 3000 will be used.
+
+#### Dynamic TLS settings
+
+TLS-related settings can also be obtained from environment variables in the same way.
+
+```elixir
+config :my_app, MySocketHandler,
+  tls: {:system, "USE_TLS", true},
+  tls_certfile: {:system, "MY_TLS_CERT", "/default/path/to/cert"},
+  tls_keyfile: {:system, "MY_TLS_PRIVKEY", "/default/path/to/key"},
+```
 
 ## LICENSE
 

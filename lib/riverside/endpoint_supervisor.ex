@@ -16,11 +16,18 @@ defmodule Riverside.EndpointSupervisor do
 
     router = Keyword.get(opts, :router, Riverside.Router)
 
+    scheme =
+      if Config.get_tls(handler.__config__.tls) do
+        :https
+      else
+        :http
+      end
+
     [
       {
         Plug.Cowboy,
         [
-          scheme: :http,
+          scheme: scheme,
           plug: router,
           options: cowboy_opts(router, handler)
         ]
@@ -41,8 +48,20 @@ defmodule Riverside.EndpointSupervisor do
       protocol_options: [{:idle_timeout, idle_timeout}]
     ]
 
-    if module.__config__.reuse_port do
-      cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
+    cowboy_opts =
+      if module.__config__.reuse_port do
+        cowboy_opts ++ [{:raw, 1, 15, <<1, 0, 0, 0>>}]
+      else
+        cowboy_opts
+      end
+
+    if Config.get_tls(module.__config__.tls) do
+      cowboy_opts ++
+        [
+          otp_app: module.__config__.otp_app,
+          certfile: Config.get_tls_certfile(module.__config__.tls_certfile),
+          keyfile: Config.get_tls_keyfile(module.__config__.tls_keyfile)
+        ]
     else
       cowboy_opts
     end
