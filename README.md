@@ -9,7 +9,7 @@ by adding `riverside` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:riverside, "~> 2.0.0"}
+    {:riverside, "~> 2.1.0"}
   ]
 end
 ```
