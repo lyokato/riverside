@@ -16,7 +16,8 @@ defmodule Riverside.Config do
           tls_certfile: String.t(),
           tls_keyfile: String.t(),
           transmission_limit: Keyword.t(),
-          otp_app: atom
+          otp_app: atom,
+          cowboy_opts: keyword()
         }
 
   defstruct max_connections: 0,
@@ -31,7 +32,8 @@ defmodule Riverside.Config do
             tls_certfile: "",
             tls_keyfile: "",
             transmission_limit: [],
-            otp_app: nil
+            otp_app: nil,
+            cowboy_opts: []
 
   @doc ~S"""
   Load handler's configuration.
@@ -150,6 +152,18 @@ defmodule Riverside.Config do
         raise ArgumentError,
               "'tls_keyfile' config should be a string or a tuple styleed value like {:system, 'ENV_NAME', '/path/to/default/keyfile'}."
     end
+  end
+
+  @doc ~S"""
+  Get runtime cowboy options
+  """
+  @spec get_cowboy_opts(term) :: keyword()
+  def get_cowboy_opts(nil), do: []
+  def get_cowboy_opts(opts) when is_list(opts), do: opts
+
+  def get_cowboy_opts(_) do
+    raise ArgumentError,
+          "'cowboy_opts' config should be a keyword list of cowboy options, see [Cowboy docs](https://ninenines.eu/docs/en/cowboy/2.5/manual/cowboy_http/)."
   end
 
   @doc ~S"""

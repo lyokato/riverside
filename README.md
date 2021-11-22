@@ -98,6 +98,9 @@ config :my_app, MySocketHandler,
   transmission_limit: [
     capacity: 50,  # if 50 frames are sent on a connection
     duration: 2000 # in 2 seconds, disconnect it.
+  ],
+  cowboy_opts: [
+    #...
   ]
 ```
 
@@ -789,6 +792,7 @@ config :my_app, MySocketHandler,
 |tls|false|use TLS or not. If you set this flag, then you must also set the two parameters tls_certfile and tls_keyfile.|
 |tls_certfile|""|path to cert file for TLS|
 |tls_keyfile|""|path to private-key file for TLS|
+|cowboy_opts|| Set extra options for [cowboy](https://ninenines.eu/docs/en/cowboy/2.5/manual/cowboy_http/)|
 
 #### Dynamic Port Number
 
