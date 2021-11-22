@@ -56,7 +56,8 @@ defmodule Riverside.Config do
       tls_certfile: Keyword.get(config, :tls_certfile, ""),
       tls_keyfile: Keyword.get(config, :tls_keyfile, ""),
       transmission_limit: transmission_limit(config),
-      otp_app: otp_app
+      otp_app: otp_app,
+      cowboy_opts: Keyword.get(config, :cowboy_opts, [])
     }
   end
 
