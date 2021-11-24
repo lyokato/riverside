@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.2.0] - 2021/11/24
+
+### CHANGED
+
+- allow to set cowboy options(https://github.com/lyokato/riverside/pull/61). thanks to PhilWaldmann
+
 ## [2.0.0] - 2021/10/26
 
 ### CHANGED
