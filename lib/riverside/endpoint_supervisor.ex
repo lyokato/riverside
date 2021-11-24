@@ -39,14 +39,16 @@ defmodule Riverside.EndpointSupervisor do
     Config.ensure_module_loaded(module)
 
     port = Config.get_port(module.__config__.port)
+    extra_opts = Config.get_cowboy_opts(module.__config__.cowboy_opts)
     path = module.__config__.path
     idle_timeout = module.__config__.idle_timeout
 
-    cowboy_opts = [
-      port: port,
-      dispatch: dispatch_opts(module, router, path),
-      protocol_options: [{:idle_timeout, idle_timeout}]
-    ]
+    cowboy_opts =
+      [
+        port: port,
+        dispatch: dispatch_opts(module, router, path),
+        protocol_options: [{:idle_timeout, idle_timeout}]
+      ] ++ extra_opts
 
     cowboy_opts =
       if module.__config__.reuse_port do
