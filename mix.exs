@@ -4,7 +4,7 @@ defmodule Riverside.Mixfile do
   def project do
     [
       app: :riverside,
-      version: "2.2.0",
+      version: "2.2.1",
       elixir: "~> 1.11",
       package: package(),
       build_embedded: Mix.env() == :prod,
