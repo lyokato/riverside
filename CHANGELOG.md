@@ -1,5 +1,11 @@
 # Change Log
 
+## [2.2.1] - 2021/12/11
+
+### CHANGED
+
+- fixing dialyzer error(https://github.com/lyokato/riverside/pull/62). thanks to FFEvan
+
 ## [2.2.0] - 2021/11/24
 
 ### CHANGED
