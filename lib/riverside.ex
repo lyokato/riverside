@@ -879,16 +879,11 @@ defmodule Riverside do
         end
       end
 
-      @spec deliver(
-              Riverside.LocalDelivery.destination(),
-              {Riverside.Codec.frame_type(), binary}
-            ) :: :ok | :error
+      @spec deliver(Riverside.LocalDelivery.destination(), any) :: :ok | :error
       def deliver(dest, {frame_type, message}) do
         Riverside.LocalDelivery.deliver(dest, {frame_type, message})
         :ok
       end
-
-      @spec deliver(Riverside.LocalDelivery.destination(), any) :: :ok | :error
 
       def deliver(dest, data) do
         case @riverside_config.codec.encode(data) do
